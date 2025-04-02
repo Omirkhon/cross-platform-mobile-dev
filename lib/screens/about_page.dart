@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'about_page2.dart'; 
+
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -46,7 +48,7 @@ class AboutPage extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 30),
                 child: Text(
-                  "Developed by Issayeva Vera, sailau Ayaulym, Turgimbayev Amirkhanin the scope of the course “Crossplatform Development” at Astana IT University.\n"
+                  "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhanin the scope of the course “Crossplatform Development” at Astana IT University.\n"
                   "Mentor : Assistant Professor Abzal Kyzyrkanov",
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -60,21 +62,25 @@ class AboutPage extends StatelessWidget {
               const SizedBox(height: 50),
               
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AboutPage2()), 
+                    );
+                  },
+                  child: const Text(
+                    " → ",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
-                onPressed: () {
-                  print("Let's Start button pressed");
-                },
-                child: const Text(
-                  "Let's Start  →",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
+
               const SizedBox(height: 20),
             ],
           ),
