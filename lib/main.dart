@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/about_page.dart';
 import 'screens/about_page2.dart';
+import 'screens/main_page.dart';
+import 'screens/create_task.dart';
 
 
 void main() {

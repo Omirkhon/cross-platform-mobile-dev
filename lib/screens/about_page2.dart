@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'about_page.dart';
+import 'main_page.dart';
 
 class AboutPage2 extends StatelessWidget {
   const AboutPage2({super.key});
@@ -41,8 +42,6 @@ class AboutPage2 extends StatelessWidget {
                   ),
                 ),
               ),
-              
-
               const SizedBox(height: 50),
 
               ElevatedButton(
@@ -53,17 +52,18 @@ class AboutPage2 extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                 onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainPage()), 
+                    );
+                  },
                 child: const Text(
-                  "← Back",
+                  "Let's start → ",
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 20),
-              
-              
+              const SizedBox(height: 20),   
             ],
           ),
         ),
