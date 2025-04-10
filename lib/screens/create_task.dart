@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'about_page2.dart';
 
 class CreateTaskPage extends StatefulWidget {
   const CreateTaskPage({super.key});
@@ -14,13 +13,15 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   void _saveTask() {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
-      Navigator.pop(context, text); 
+      Navigator.pop(context, text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(  
+    final isWide = MediaQuery.of(context).size.width > 600;
+
+    return Scaffold(
       appBar: AppBar(
         title: const Text("Create a task"),
         backgroundColor: Colors.deepPurple,
@@ -36,6 +37,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                 hintText: "Enter the task...",
                 border: OutlineInputBorder(),
               ),
+              style: TextStyle(fontSize: isWide ? 20 : 16),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -48,9 +50,9 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 "Save",
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: isWide ? 20 : 18, color: Colors.white),
               ),
             )
           ],
