@@ -19,18 +19,21 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width > 600;
+    final size = MediaQuery.of(context).size;
+    final isWide = size.width > 600;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Create a task"),
         backgroundColor: Colors.deepPurple,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            TextField(
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          final isPortrait = orientation == Orientation.portrait;
+
+          final textField = Expanded(
+            flex: 3,
+            child: TextField(
               controller: _controller,
               autofocus: true,
               decoration: const InputDecoration(
@@ -39,8 +42,11 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               ),
               style: TextStyle(fontSize: isWide ? 20 : 16),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+          );
+
+          final saveButton = Expanded(
+            flex: 2,
+            child: ElevatedButton(
               onPressed: _saveTask,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
@@ -54,9 +60,28 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                 "Save",
                 style: TextStyle(fontSize: isWide ? 20 : 18, color: Colors.white),
               ),
-            )
-          ],
-        ),
+            ),
+          );
+
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: isPortrait
+                ? Column(
+                    children: [
+                      textField,
+                      const SizedBox(height: 20),
+                      saveButton,
+                    ],
+                  )
+                : Row(
+                    children: [
+                      textField,
+                      const SizedBox(width: 20),
+                      saveButton,
+                    ],
+                  ),
+          );
+        },
       ),
     );
   }
