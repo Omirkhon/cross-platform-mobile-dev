@@ -20,7 +20,22 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   final TextEditingController _controller = TextEditingController();
   TimeOfDay? _selectedTime;
   final List<String> _categories = ["Work", "Personal", "Shopping", "Health", "Learning", "Social", "Hobby", "Goals"];
-String? _selectedCategory;
+  String? _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialText != null) {
+      _controller.text = widget.initialText!;
+    }
+    if (widget.initialTime != null) {
+    _selectedTime = TimeOfDay(
+      hour: widget.initialTime!.hour,
+        minute: widget.initialTime!.minute,
+    );
+  }
+  _selectedCategory = widget.initialCategory;
+  }
 
   void _saveTask() {
     final text = _controller.text.trim();
