@@ -29,12 +29,12 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       _controller.text = widget.initialText!;
     }
     if (widget.initialTime != null) {
-    _selectedTime = TimeOfDay(
-      hour: widget.initialTime!.hour,
+      _selectedTime = TimeOfDay(
+        hour: widget.initialTime!.hour,
         minute: widget.initialTime!.minute,
-    );
-  }
-  _selectedCategory = widget.initialCategory;
+      );
+    }
+    _selectedCategory = widget.initialCategory;
   }
 
   void _saveTask() {
@@ -42,20 +42,20 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     if (text.isNotEmpty) {
       final taskTime = _selectedTime != null
           ? DateTime(
-            DateTime.now().year,
-            DateTime.now().month,
-            DateTime.now().day,
-            _selectedTime!.hour,
-            _selectedTime!.minute,
-          )
+              DateTime.now().year,
+              DateTime.now().month,
+              DateTime.now().day,
+              _selectedTime!.hour,
+              _selectedTime!.minute,
+            )
           : null;
-      Navigator.pop(context, {'task': text , 'time': taskTime, 'category': _selectedCategory,});
+      Navigator.pop(context, {'task': text, 'time': taskTime, 'category': _selectedCategory});
     }
   }
 
-  Future<void> _pickTime() async{
+  Future<void> _pickTime() async {
     final time = await showTimePicker(
-      context: context, 
+      context: context,
       initialTime: TimeOfDay.now(),
     );
     if (time != null) {
@@ -69,15 +69,15 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: isDark ? Colors.black : Colors.grey[100],
       appBar: AppBar(
         title: const Text("Task Manager"),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
-
       body: OrientationBuilder(
         builder: (context, orientation) {
           final isPortrait = orientation == Orientation.portrait;
@@ -87,7 +87,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
             child: TextField(
               controller: _controller,
               autofocus: true,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: "Enter the task...",
                 border: OutlineInputBorder(),
               ),
@@ -98,8 +98,8 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           final timeButton = ElevatedButton(
             onPressed: _pickTime,
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.deepPurple, width: 2),
-              backgroundColor: Colors.white,
+              side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -109,42 +109,41 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               _selectedTime == null
                   ? 'Pick time'
                   : 'Time: ${_selectedTime!.format(context)}',
-              style: TextStyle(fontSize: isWide ? 20 : 18, color: Colors.deepPurple),
-              ),
-            );
+              style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.primary),
+            ),
+          );
 
-            final categoryDropdown = Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                hint: const Text("Choose category"),
-                items: _categories
-                    .map((cat) => DropdownMenuItem<String>(
-                          value: cat,
-                          child: Text(cat),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Colors.deepPurple),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Colors.deepPurple),
-                  ),
+          final categoryDropdown = Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text("Choose category"),
+              items: _categories
+                  .map((cat) => DropdownMenuItem<String>(
+                        value: cat,
+                        child: Text(cat),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCategory = value;
+                });
+              },
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                 ),
-                style: const TextStyle(color: Colors.deepPurple, fontSize: 16),
-                dropdownColor: Colors.white,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                ),
               ),
-            );
+              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
+              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+            ),
+          );
 
           final saveButton = Padding(
             padding: const EdgeInsets.only(top: 16),
@@ -153,7 +152,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               child: ElevatedButton(
                 onPressed: _saveTask,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
@@ -162,7 +161,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                 ),
                 child: Text(
                   "Save",
-                  style: TextStyle(fontSize: isWide ? 20 : 18, color: Colors.white),
+                  style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.onPrimary),
                 ),
               ),
             ),

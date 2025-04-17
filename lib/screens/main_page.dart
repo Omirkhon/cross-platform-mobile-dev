@@ -127,9 +127,11 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final orientation = MediaQuery.of(context).orientation;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToCreateTask,
         backgroundColor: Colors.deepPurple,
@@ -143,14 +145,14 @@ class _MainPageState extends State<MainPage> {
           builder: (context, constraints) {
             Widget content;
             if (constraints.maxWidth < 600) {
-              content = buildMainContent(size, orientation, fontSize: 18);
+              content = buildMainContent(size, orientation, fontSize: 18, theme: theme);
             } else if (constraints.maxWidth < 1000) {
-              content = buildMainContent(size, orientation, fontSize: 22);
+              content = buildMainContent(size, orientation, fontSize: 22, theme: theme);
             } else {
               content = Center(
                 child: SizedBox(
                   width: 700,
-                  child: buildMainContent(size, orientation, fontSize: 26),
+                  child: buildMainContent(size, orientation, fontSize: 26, theme: theme),
                 ),
               );
             }
@@ -165,17 +167,17 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget buildMainContent(Size size, Orientation orientation, {required double fontSize}) {
+  Widget buildMainContent(Size size, Orientation orientation,
+      {required double fontSize, required ThemeData theme}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Center(
+        Center(
           child: Text(
             "TO-DO LIST",
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.headlineMedium?.copyWith(
               color: Colors.deepPurple,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
@@ -183,115 +185,116 @@ class _MainPageState extends State<MainPage> {
         Expanded(
           child: _tasks.isEmpty
               ? Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-              SizedBox(height: 12),
-              Text(
-                "there are no tasks.",
-                style: TextStyle(fontSize: 18, color: Colors.black54),
-              ),
-            ],
-          )
-              : ListView.builder(
-            itemCount: _tasks.length,
-            itemBuilder: (context, index) {
-              final task = _tasks[index];
-              final taskTime = task.time;
-              final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
-
-              return Dismissible(
-                key: Key(task.text + index.toString()),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.redAccent,
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                onDismissed: (_) => _deleteTask(index),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      task.isDone = !task.isDone;
-                    });
-                  },
-                  onLongPress: () => _editTask(index),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                    const SizedBox(height: 12),
+                    Text(
+                      "There are no tasks.",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          task.isDone
-                              ? Icons.check_circle
-                              : Icons.radio_button_unchecked,
-                          color: task.isDone ? Colors.green : Colors.deepPurple,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                )
+              : ListView.builder(
+                  itemCount: _tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = _tasks[index];
+                    final taskTime = task.time;
+                    final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
+
+                    return Dismissible(
+                      key: Key(task.text + index.toString()),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.redAccent,
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      onDismissed: (_) => _deleteTask(index),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            task.isDone = !task.isDone;
+                          });
+                        },
+                        onLongPress: () => _editTask(index),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                task.text,
-                                style: TextStyle(
-                                  fontSize: fontSize - 2,
-                                  decoration: task.isDone
-                                      ? TextDecoration.lineThrough
-                                      : TextDecoration.none,
-                                  color:
-                                  task.isDone ? Colors.grey : Colors.black87,
+                              Icon(
+                                task.isDone
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                                color: task.isDone ? Colors.green : Colors.deepPurple,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      task.text,
+                                      style: TextStyle(
+                                        fontSize: fontSize - 2,
+                                        decoration: task.isDone
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                        color: task.isDone
+                                            ? theme.disabledColor
+                                            : theme.textTheme.bodyLarge?.color,
+                                      ),
+                                    ),
+                                    if (task.category != null)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _categoryColors[task.category] ?? Colors.grey,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          task.category!,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      )
+                                  ],
                                 ),
                               ),
-                              if (task.category != null)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: _categoryColors[task.category] ??
-                                        Colors.grey,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    task.category!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                              if (task.time != null)
+                                Text(
+                                  '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isTimePassed ? Colors.red : theme.hintColor,
                                   ),
                                 )
                             ],
                           ),
                         ),
-                        if (task.time != null)
-                          Text(
-                            '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isTimePassed ? Colors.red : Colors.grey,
-                            ),
-                          )
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
