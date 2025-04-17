@@ -9,13 +9,18 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class Task{
-  final String text;
+class Task {
+  String text;
   bool isDone;
-  final DateTime? time;
-  final String? category;
+  DateTime? time;
+  String? category;
 
-  Task({required this.text, this.isDone=false , this.time, this.category});
+  Task({
+    required this.text,
+    this.isDone = false,
+    this.time,
+    this.category,
+  });
 }
 
 class _MainPageState extends State<MainPage> {
@@ -23,21 +28,20 @@ class _MainPageState extends State<MainPage> {
   late Timer _timer;
 
   final Map<String, Color> _categoryColors = {
-  "Work": Colors.blue,
-  "Personal": Colors.orange,
-  "Shopping": Colors.green,
-  "Health": Colors.red,
-  "Learning": Colors.purple,
-  "Social": Colors.teal,
-  "Hobby": Colors.brown,
-  "Goals": Colors.pink,
-};
-
+    "Work": Colors.blue,
+    "Personal": Colors.orange,
+    "Shopping": Colors.green,
+    "Health": Colors.red,
+    "Learning": Colors.purple,
+    "Social": Colors.teal,
+    "Hobby": Colors.brown,
+    "Goals": Colors.pink,
+  };
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    _timer=Timer.periodic(const Duration(seconds: 30), _checkTasks);
+    _timer = Timer.periodic(const Duration(seconds: 30), _checkTasks);
   }
 
   @override
@@ -63,13 +67,60 @@ class _MainPageState extends State<MainPage> {
     );
 
     if (newTask != null && newTask is Map) {
-      final taskText = newTask['task'];
-      final taskTime = newTask['time'];
-      final taskCategory = newTask['category'];
-      setState(() {
-        _tasks.add(Task(text: taskText , time: taskTime, category: taskCategory, ));
-      });
+      final taskText = newTask['task'] as String?;
+      final taskTime = newTask['time'] as DateTime?;
+      final taskCategory = newTask['category'] as String?;
+
+      if (taskText != null) {
+        setState(() {
+          _tasks.add(Task(
+            text: taskText,
+            time: taskTime,
+            category: taskCategory,
+          ));
+        });
+      }
     }
+  }
+
+  void _editTask(int index) async {
+    final editedTask = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateTaskPage(
+          initialText: _tasks[index].text,
+          initialTime: _tasks[index].time,
+          initialCategory: _tasks[index].category,
+        ),
+      ),
+    );
+
+    if (editedTask != null && editedTask is Map) {
+      final taskText = editedTask['task'] as String?;
+      final taskTime = editedTask['time'] as DateTime?;
+      final taskCategory = editedTask['category'] as String?;
+
+      if (taskText != null) {
+        setState(() {
+          _tasks[index].text = taskText;
+          _tasks[index].time = taskTime;
+          _tasks[index].category = taskCategory;
+        });
+      }
+    }
+  }
+
+  void _deleteTask(int index) {
+    final deletedTask = _tasks[index];
+    setState(() {
+      _tasks.removeAt(index);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Task "${deletedTask.text}" deleted'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -87,7 +138,6 @@ class _MainPageState extends State<MainPage> {
         ),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -130,7 +180,6 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
         const SizedBox(height: 20),
-
         Expanded(
           child: _tasks.isEmpty
               ? Column(
@@ -150,78 +199,94 @@ class _MainPageState extends State<MainPage> {
               final task = _tasks[index];
               final taskTime = task.time;
               final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
-              return GestureDetector(
-                onTap:() {
-                  setState(() {
-                    task.isDone = !task.isDone;
-                  });
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        task.isDone
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                          color: task.isDone ? Colors.green : Colors.deepPurple,
-                      ),
-                      const SizedBox(width: 12),
 
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              task.text,
-                              style: TextStyle(
-                                fontSize: fontSize -2,
-                                decoration: task.isDone
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none,
-                                color: task.isDone ? Colors.grey : Colors.black87,
-                              ),
-                            ),
-
-                            if (task.category != null)
-                              Container(
-                                margin: const EdgeInsets.only(top: 4),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: _categoryColors[task.category] ?? Colors.grey,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  task.category!,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              )
-                          ],
-                          
+              return Dismissible(
+                key: Key(task.text + index.toString()),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  color: Colors.redAccent,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (_) => _deleteTask(index),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      task.isDone = !task.isDone;
+                    });
+                  },
+                  onLongPress: () => _editTask(index),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                      ),
-                      if (task.time != null)
-                        Text(
-                          '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(fontSize: 16, color: isTimePassed ? Colors.red : Colors.grey,),
-                        )
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          task.isDone
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color: task.isDone ? Colors.green : Colors.deepPurple,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                task.text,
+                                style: TextStyle(
+                                  fontSize: fontSize - 2,
+                                  decoration: task.isDone
+                                      ? TextDecoration.lineThrough
+                                      : TextDecoration.none,
+                                  color:
+                                  task.isDone ? Colors.grey : Colors.black87,
+                                ),
+                              ),
+                              if (task.category != null)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _categoryColors[task.category] ??
+                                        Colors.grey,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    task.category!,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                )
+                            ],
+                          ),
+                        ),
+                        if (task.time != null)
+                          Text(
+                            '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isTimePassed ? Colors.red : Colors.grey,
+                            ),
+                          )
+                      ],
+                    ),
                   ),
                 ),
               );

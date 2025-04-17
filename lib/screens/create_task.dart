@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class CreateTaskPage extends StatefulWidget {
-  const CreateTaskPage({super.key});
+  final String? initialText;
+  final DateTime? initialTime;
+  final String? initialCategory;
+
+  const CreateTaskPage({
+    super.key,
+    this.initialText,
+    this.initialTime,
+    this.initialCategory,
+  });
 
   @override
   State<CreateTaskPage> createState() => _CreateTaskPageState();
@@ -49,7 +58,7 @@ String? _selectedCategory;
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Create a task"),
+        title: const Text("Task Manager"),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
