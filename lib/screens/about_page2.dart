@@ -16,7 +16,8 @@ class AboutPage2 extends StatelessWidget {
             'assets/logo.png',
             width: isWide ? 250 : 200,
           );
-
+          
+          final textTheme = Theme.of(context).textTheme;
           final textContent = Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -27,7 +28,6 @@ class AboutPage2 extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isWide ? 36 : 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 10),
@@ -36,7 +36,6 @@ class AboutPage2 extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isWide ? 20 : 18,
-                  color: Colors.black54,
                 ),
               ),
               const SizedBox(height: 10),
@@ -44,8 +43,7 @@ class AboutPage2 extends StatelessWidget {
                 "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan. In the scope of the course “Crossplatform Development” at Astana IT University.\nMentor : Assistant Professor Abzal Kyzyrkanov",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.black54,
+                  fontSize: 12,
                 ),
               ),
             ],

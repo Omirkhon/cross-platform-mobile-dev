@@ -3,8 +3,10 @@ import 'screens/about_page2.dart';
 import 'screens/main_page.dart';
 import 'screens/settings_page.dart';
 
+ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -12,40 +14,44 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'To-Do List',
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.deepPurple,
-        scaffoldBackgroundColor: Colors.grey[100],
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.deepPurple,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-        ),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.deepPurple,
-        scaffoldBackgroundColor: Colors.grey[900],
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Colors.deepPurple,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-        ),
-      ),
-      themeMode: ThemeMode.system,
-
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const MyHomePage(), 
-        '/about2': (context) => const AboutPage2(),
-        '/settings': (context) => const SettingsPage(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier, 
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'To-Do List',
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: Colors.grey[100],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: Colors.grey[900],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          themeMode: themeMode, 
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const MyHomePage(),
+            '/about2': (context) => const AboutPage2(),
+            '/settings': (context) => const SettingsPage(),
+          },
+        );
       },
     );
   }
@@ -70,9 +76,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('To-Do List'),
-      ),
       body: IndexedStack(
         index: _currentIndex,
         children: const <Widget>[

@@ -172,6 +172,16 @@ class _MainPageState extends State<MainPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const Center(
+          child: Text(
+            "TO-DO LIST",
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
+          ),
+        ),
         const SizedBox(height: 20),
         Expanded(
           child: _tasks.isEmpty
