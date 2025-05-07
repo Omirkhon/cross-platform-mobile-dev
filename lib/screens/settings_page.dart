@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../main.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -27,7 +29,7 @@ class SettingsPage extends StatelessWidget {
             valueListenable: themeNotifier,
             builder: (context, currentTheme, _) {
               return ListTile(
-                title: const Text('Dark mode'),
+                title: Text('Dark mode'),
                 trailing: Switch(
                   value: currentTheme == ThemeMode.dark,
                   onChanged: (bool value) {
@@ -37,6 +39,32 @@ class SettingsPage extends StatelessWidget {
                 ),
               );
             },
+          ),
+          const Divider(),
+          ListTile(
+            title: const Text('Language'),
+            trailing: DropdownButton<Locale>(
+              value: localeNotifier.value,
+              onChanged: (Locale? newValue) {
+                if (newValue != null) {
+                  localeNotifier.value = newValue;
+                }
+              },
+              items: const [
+                DropdownMenuItem(
+                  value: Locale('en'),
+                  child: Text('English'),
+                ),
+                DropdownMenuItem(
+                  value: Locale('ru'),
+                  child: Text('Русский'),
+                ),
+                DropdownMenuItem(
+                  value: Locale('kk'),
+                  child: Text('Қазақша'),
+                ),
+              ],
+            ),
           ),
         ],
       ),

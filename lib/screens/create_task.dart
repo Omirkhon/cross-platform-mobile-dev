@@ -72,7 +72,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.black : Colors.grey[100],
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey[100],
       appBar: AppBar(
         title: const Text("Task Manager"),
         backgroundColor: Theme.of(context).colorScheme.primary,
