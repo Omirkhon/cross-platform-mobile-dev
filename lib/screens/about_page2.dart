@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'main_page.dart';
 
 class AboutPage2 extends StatelessWidget {
   const AboutPage2({super.key});
@@ -23,7 +22,7 @@ class AboutPage2 extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "About App",
+                "JUST DO IT!",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isWide ? 36 : 32,
@@ -40,24 +39,13 @@ class AboutPage2 extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 50),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainPage()),
-                  );
-                },
-                child: const Text(
-                  "Let's start → ",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+              const SizedBox(height: 10),
+              const Text(
+                "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan. In the scope of the course “Crossplatform Development” at Astana IT University.\nMentor : Assistant Professor Abzal Kyzyrkanov",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.black54,
                 ),
               ),
             ],
