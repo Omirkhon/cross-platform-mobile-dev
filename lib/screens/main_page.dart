@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'create_task.dart';
 import 'dart:async';
-import 'auth_service.dart';  // Make sure to import the AuthService
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -27,7 +26,6 @@ class Task {
 class _MainPageState extends State<MainPage> {
   final List<Task> _tasks = [];
   late Timer _timer;
-  final AuthService _auth = AuthService();  // Initialize AuthService
 
   final Map<String, Color> _categoryColors = {
     "Work": Colors.blue,
@@ -131,44 +129,7 @@ class _MainPageState extends State<MainPage> {
     final orientation = MediaQuery.of(context).orientation;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final isGuest = _auth.currentUser == null;  // Check if user is guest
 
-    // Guest mode banner
-    if (isGuest) {
-      return Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: Colors.amber,
-            child: Row(
-              children: [
-                const Icon(Icons.info, color: Colors.black),
-                const SizedBox(width: 8),
-                const Text(
-                  'Guest Mode - Some features are disabled',
-                  style: TextStyle(color: Colors.black),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: const Text(
-                    'Sign In',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _buildMainContent(size, orientation, theme),
-          ),
-        ],
-      );
-    }
-
-    // Regular logged-in view
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton(
@@ -184,14 +145,14 @@ class _MainPageState extends State<MainPage> {
           builder: (context, constraints) {
             Widget content;
             if (constraints.maxWidth < 600) {
-              content = _buildMainContent(size, orientation, theme, fontSize: 18);
+              content = buildMainContent(size, orientation, fontSize: 18, theme: theme);
             } else if (constraints.maxWidth < 1000) {
-              content = _buildMainContent(size, orientation, theme, fontSize: 22);
+              content = buildMainContent(size, orientation, fontSize: 22, theme: theme);
             } else {
               content = Center(
                 child: SizedBox(
                   width: 700,
-                  child: _buildMainContent(size, orientation, theme, fontSize: 26),
+                  child: buildMainContent(size, orientation, fontSize: 26, theme: theme),
                 ),
               );
             }
@@ -206,7 +167,8 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildMainContent(Size size, Orientation orientation, ThemeData theme, {double fontSize = 18}) {
+  Widget buildMainContent(Size size, Orientation orientation,
+      {required double fontSize, required ThemeData theme}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -224,116 +186,116 @@ class _MainPageState extends State<MainPage> {
         Expanded(
           child: _tasks.isEmpty
               ? Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-              const SizedBox(height: 12),
-              Text(
-                "There are no tasks.",
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.hintColor,
-                ),
-              ),
-            ],
-          )
-              : ListView.builder(
-            itemCount: _tasks.length,
-            itemBuilder: (context, index) {
-              final task = _tasks[index];
-              final taskTime = task.time;
-              final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
-
-              return Dismissible(
-                key: Key(task.text + index.toString()),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.redAccent,
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                onDismissed: (_) => _deleteTask(index),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      task.isDone = !task.isDone;
-                    });
-                  },
-                  onLongPress: () => _editTask(index),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: theme.cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                    const SizedBox(height: 12),
+                    Text(
+                      "There are no tasks.",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.hintColor,
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          task.isDone
-                              ? Icons.check_circle
-                              : Icons.radio_button_unchecked,
-                          color: task.isDone ? Colors.green : Colors.deepPurple,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                )
+              : ListView.builder(
+                  itemCount: _tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = _tasks[index];
+                    final taskTime = task.time;
+                    final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
+
+                    return Dismissible(
+                      key: Key(task.text + index.toString()),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        color: Colors.redAccent,
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      onDismissed: (_) => _deleteTask(index),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            task.isDone = !task.isDone;
+                          });
+                        },
+                        onLongPress: () => _editTask(index),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
                             children: [
-                              Text(
-                                task.text,
-                                style: TextStyle(
-                                  fontSize: fontSize - 2,
-                                  decoration: task.isDone
-                                      ? TextDecoration.lineThrough
-                                      : TextDecoration.none,
-                                  color: task.isDone
-                                      ? theme.disabledColor
-                                      : theme.textTheme.bodyLarge?.color,
+                              Icon(
+                                task.isDone
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                                color: task.isDone ? Colors.green : Colors.deepPurple,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      task.text,
+                                      style: TextStyle(
+                                        fontSize: fontSize - 2,
+                                        decoration: task.isDone
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none,
+                                        color: task.isDone
+                                            ? theme.disabledColor
+                                            : theme.textTheme.bodyLarge?.color,
+                                      ),
+                                    ),
+                                    if (task.category != null)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _categoryColors[task.category] ?? Colors.grey,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          task.category!,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      )
+                                  ],
                                 ),
                               ),
-                              if (task.category != null)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 4),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: _categoryColors[task.category] ?? Colors.grey,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    task.category!,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                              if (task.time != null)
+                                Text(
+                                  '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isTimePassed ? Colors.red : theme.hintColor,
                                   ),
                                 )
                             ],
                           ),
                         ),
-                        if (task.time != null)
-                          Text(
-                            '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isTimePassed ? Colors.red : theme.hintColor,
-                            ),
-                          )
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );
