@@ -1,5 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'screens/about_page2.dart';
 import 'screens/main_page.dart';
@@ -10,21 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 ValueNotifier<Locale> localeNotifier = ValueNotifier(Locale('en'));
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  if (kIsWeb) {
-    await Firebase.initializeApp(options: FirebaseOptions(
-        apiKey: "AIzaSyAz-K4g5czNxzq0NW23xlS6yNLiV4Q0wTQ",
-        authDomain: "fir-flutter-32a56.firebaseapp.com",
-        projectId: "fir-flutter-32a56",
-        storageBucket: "fir-flutter-32a56.firebasestorage.app",
-        messagingSenderId: "30939901282",
-        appId: "1:30939901282:web:dbae53f514eca15994d03b"));
-  } else {
-    await Firebase.initializeApp();
-  }
-  
+void main() {
   runApp(MyApp());
 }
 
