@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+
 import 'screens/about_page2.dart';
 import 'screens/main_page.dart';
 import 'screens/settings_page.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
-ValueNotifier<Locale> localeNotifier = ValueNotifier(Locale('en'));
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('ru'), Locale('kk')],
+      path: 'assets/translation',
+      fallbackLocale: const Locale('en'),
+      saveLocale: true,
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -20,52 +30,42 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, themeMode, _) {
-        return ValueListenableBuilder<Locale>(
-          valueListenable: localeNotifier,
-          builder: (context, selectedLocale, _) {
-            return MaterialApp(
-              debugShowCheckedModeBanner: false,  
-              title: 'To-Do List',
-              theme: ThemeData(
-                brightness: Brightness.light,
-                primarySwatch: Colors.deepPurple,
-                scaffoldBackgroundColor: Colors.grey[100],
-                floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                  backgroundColor: Colors.deepPurple,
-                ),
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              darkTheme: ThemeData(
-                brightness: Brightness.dark,
-                primarySwatch: Colors.deepPurple,
-                scaffoldBackgroundColor: Colors.grey[900],
-                floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                  backgroundColor: Colors.deepPurple,
-                ),
-                appBarTheme: const AppBarTheme(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-              themeMode: themeMode,
-              locale: selectedLocale,
-              supportedLocales: AppLocalizations.supportedLocales,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              initialRoute: '/',
-              routes: {
-                '/': (context) => const MyHomePage(),
-                '/about2': (context) => const AboutPage2(),
-                '/settings': (context) => const SettingsPage(),
-              },
-            );
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'To-Do List',
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: Colors.grey[100],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primarySwatch: Colors.deepPurple,
+            scaffoldBackgroundColor: Colors.grey[900],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          themeMode: themeMode,
+          locale: context.locale,
+          supportedLocales: context.supportedLocales,
+          localizationsDelegates: context.localizationDelegates,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const MyHomePage(),
+            '/about2': (context) => const AboutPage2(),
+            '/settings': (context) => const SettingsPage(),
           },
         );
       },
@@ -99,26 +99,25 @@ class _MyHomePageState extends State<MyHomePage> {
           AboutPage2(),
           SettingsPage(),
         ],
-      ), 
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: tr('nav.home'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'About',
+            icon: const Icon(Icons.info),
+            label: tr('nav.about'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: const Icon(Icons.settings),
+            label: tr('nav.settings'),
           ),
         ],
       ),
     );
   }
 }
-

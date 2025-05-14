@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../main.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -15,7 +14,7 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.only(top: 40.0, bottom: 20.0),
             child: Center(
               child: Text(
-                "SETTINGS",
+                tr("nav.settings").toUpperCase(),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -29,7 +28,7 @@ class SettingsPage extends StatelessWidget {
             valueListenable: themeNotifier,
             builder: (context, currentTheme, _) {
               return ListTile(
-                title: Text('Dark mode'),
+                title: Text(tr('settings.mode')),
                 trailing: Switch(
                   value: currentTheme == ThemeMode.dark,
                   onChanged: (bool value) {
@@ -42,12 +41,12 @@ class SettingsPage extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
-            title: const Text('Language'),
+            title: Text(tr('settings.language')),
             trailing: DropdownButton<Locale>(
-              value: localeNotifier.value,
-              onChanged: (Locale? newValue) {
+              value: context.locale,
+              onChanged: (Locale? newValue) async {
                 if (newValue != null) {
-                  localeNotifier.value = newValue;
+                  await context.setLocale(newValue);
                 }
               },
               items: const [

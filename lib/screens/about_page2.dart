@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class AboutPage2 extends StatelessWidget {
   const AboutPage2({super.key});
@@ -16,14 +17,13 @@ class AboutPage2 extends StatelessWidget {
             'assets/logo.png',
             width: isWide ? 250 : 200,
           );
-          
-          final textTheme = Theme.of(context).textTheme;
+
           final textContent = Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "JUST DO IT!",
+                "slogan".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isWide ? 36 : 32,
@@ -32,17 +32,17 @@ class AboutPage2 extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                "JUST DO IT!'s main aim is to help users organize their tasks efficiently. It allows them to add, remove, edit and track any daily activity, ensuring productivity and time management.",
+                "description".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: isWide ? 20 : 18,
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan. In the scope of the course “Crossplatform Development” at Astana IT University.\nMentor : Assistant Professor Abzal Kyzyrkanov",
+              Text(
+                "credits".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                 ),
               ),

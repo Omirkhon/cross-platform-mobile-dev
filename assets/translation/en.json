@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "settings": "Settings"
+  },
+  "settings": {
+    "language": "Language",
+    "mode": "Dark mode"
+  },
+
+  "slogan": "JUST DO IT!",
+  "description": "The main goal of JUST DO IT! is to help users organize tasks efficiently. The app allows adding, removing, editing, and tracking daily activities, ensuring productivity and time management.",
+  "credits": "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan within the course 'Crossplatform Development' at Astana IT University.\nMentor: Assistant Professor Abzal Kyzyrkanov",
+  
+  "task_manager": "Task Manager",
+  "enter_task": "Enter the task...",
+  "pick_time": "Pick time",
+  "choose_category": "Choose category",
+  "save": "Save",
+  "categories": {
+    "work": "Work",
+    "personal": "Personal",
+    "shopping": "Shopping",
+    "health": "Health",
+    "learning": "Learning",
+    "social": "Social",
+    "hobby": "Hobby",
+    "goals": "Goals"
+  },
+  "title": "TO-DO LIST",
+  "noTasks": "There are no tasks."
+}

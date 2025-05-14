@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'create_task.dart';
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -172,9 +173,9 @@ class _MainPageState extends State<MainPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Center(
+        Center(
           child: Text(
-            "TO-DO LIST",
+            tr("title"),
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -191,7 +192,7 @@ class _MainPageState extends State<MainPage> {
                     Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
                     const SizedBox(height: 12),
                     Text(
-                      "There are no tasks.",
+                      tr("noTasks"),
                       style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.hintColor,
                       ),

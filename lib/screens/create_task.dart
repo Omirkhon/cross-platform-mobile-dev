@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class CreateTaskPage extends StatefulWidget {
   final String? initialText;
@@ -19,7 +20,16 @@ class CreateTaskPage extends StatefulWidget {
 class _CreateTaskPageState extends State<CreateTaskPage> {
   final TextEditingController _controller = TextEditingController();
   TimeOfDay? _selectedTime;
-  final List<String> _categories = ["Work", "Personal", "Shopping", "Health", "Learning", "Social", "Hobby", "Goals"];
+  final List<String> _categories = [
+    'categories.work'.tr(),
+    'categories.personal'.tr(),
+    'categories.shopping'.tr(),
+    'categories.health'.tr(),
+    'categories.learning'.tr(),
+    'categories.social'.tr(),
+    'categories.hobby'.tr(),
+    'categories.goals'.tr(),
+  ];
   String? _selectedCategory;
 
   @override
@@ -74,7 +84,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
     return Scaffold(
       backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Task Manager"),
+        title: Text("task_manager".tr()),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
@@ -88,7 +98,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
               controller: _controller,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: "Enter the task...",
+                hintText: "enter_task".tr(),
                 border: OutlineInputBorder(),
               ),
               style: TextStyle(fontSize: isWide ? 20 : 16),
@@ -107,7 +117,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
             ),
             child: Text(
               _selectedTime == null
-                  ? 'Pick time'
+                  ? 'pick_time'.tr()
                   : 'Time: ${_selectedTime!.format(context)}',
               style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.primary),
             ),
@@ -117,7 +127,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: DropdownButtonFormField<String>(
               value: _selectedCategory,
-              hint: const Text("Choose category"),
+              hint: Text("choose_category".tr()),
               items: _categories
                   .map((cat) => DropdownMenuItem<String>(
                         value: cat,
@@ -160,7 +170,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
                   ),
                 ),
                 child: Text(
-                  "Save",
+                  "save".tr(), 
                   style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.onPrimary),
                 ),
               ),
