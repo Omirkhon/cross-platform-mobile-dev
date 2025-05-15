@@ -65,11 +65,25 @@ class MyApp extends StatelessWidget {
             brightness: Brightness.light,
             primarySwatch: Colors.deepPurple,
             scaffoldBackgroundColor: Colors.grey[100],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
           ),
           darkTheme: ThemeData(
             brightness: Brightness.dark,
             primarySwatch: Colors.deepPurple,
             scaffoldBackgroundColor: Colors.grey[900],
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.deepPurple,
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+            ),
           ),
           themeMode: themeMode,
           locale: context.locale,
@@ -99,6 +113,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
 
+  void _onItemTapped(int index) {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (index == 3 && auth.isGuest) return;
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
@@ -115,10 +137,9 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          if (index == 3 && isGuest) return;
-          setState(() => _currentIndex = index);
-        },
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.home),
