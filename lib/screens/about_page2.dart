@@ -34,17 +34,13 @@ class AboutPage2 extends StatelessWidget {
               Text(
                 "description".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isWide ? 20 : 18,
-                ),
+                style: TextStyle(fontSize: isWide ? 20 : 18),
               ),
               const SizedBox(height: 10),
               Text(
                 "credits".tr(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                ),
+                style: const TextStyle(fontSize: 12),
               ),
             ],
           );
@@ -53,24 +49,25 @@ class AboutPage2 extends StatelessWidget {
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 30),
-                child: isPortrait
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          logo,
-                          const SizedBox(height: 20),
-                          textContent,
-                        ],
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(child: Center(child: logo)),
-                          const SizedBox(width: 40),
-                          Expanded(child: textContent),
-                        ],
-                      ),
+                child:
+                    isPortrait
+                        ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            logo,
+                            const SizedBox(height: 20),
+                            textContent,
+                          ],
+                        )
+                        : Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(child: Center(child: logo)),
+                            const SizedBox(width: 40),
+                            Expanded(child: textContent),
+                          ],
+                        ),
               ),
             ),
           );

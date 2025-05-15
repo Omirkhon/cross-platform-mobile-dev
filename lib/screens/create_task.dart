@@ -21,14 +21,14 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   final TextEditingController _controller = TextEditingController();
   TimeOfDay? _selectedTime;
   final List<String> _categories = [
-    'categories.work'.tr(),
-    'categories.personal'.tr(),
-    'categories.shopping'.tr(),
-    'categories.health'.tr(),
-    'categories.learning'.tr(),
-    'categories.social'.tr(),
-    'categories.hobby'.tr(),
-    'categories.goals'.tr(),
+    'Work',
+    'Personal',
+    'Shopping',
+    'Health',
+    'Learning',
+    'Social',
+    'Hobby',
+    'Goals',
   ];
   String? _selectedCategory;
 
@@ -39,10 +39,7 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
       _controller.text = widget.initialText!;
     }
     if (widget.initialTime != null) {
-      _selectedTime = TimeOfDay(
-        hour: widget.initialTime!.hour,
-        minute: widget.initialTime!.minute,
-      );
+      _selectedTime = TimeOfDay.fromDateTime(widget.initialTime!);
     }
     _selectedCategory = widget.initialCategory;
   }
@@ -50,23 +47,31 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
   void _saveTask() {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
-      final taskTime = _selectedTime != null
-          ? DateTime(
-              DateTime.now().year,
-              DateTime.now().month,
-              DateTime.now().day,
-              _selectedTime!.hour,
-              _selectedTime!.minute,
-            )
-          : null;
-      Navigator.pop(context, {'task': text, 'time': taskTime, 'category': _selectedCategory});
+      final taskData = {
+        'text': text,
+        'isDone': false,
+        'category': _selectedCategory,
+      };
+
+      if (_selectedTime != null) {
+        final now = DateTime.now();
+        taskData['time'] = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        ).millisecondsSinceEpoch;
+      }
+
+      Navigator.pop(context, taskData);
     }
   }
 
   Future<void> _pickTime() async {
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _selectedTime ?? TimeOfDay.now(),
     );
     if (time != null) {
       setState(() {
@@ -77,123 +82,62 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isWide = size.width > 600;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey[100],
       appBar: AppBar(
-        title: Text("task_manager".tr()),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: Text('createTask'.tr()),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveTask,
+          ),
+        ],
       ),
-      body: OrientationBuilder(
-        builder: (context, orientation) {
-          final isPortrait = orientation == Orientation.portrait;
-
-          final textField = Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: TextField(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
               controller: _controller,
+              decoration: InputDecoration(
+                labelText: 'taskName'.tr(),
+                border: const OutlineInputBorder(),
+              ),
               autofocus: true,
-              decoration: InputDecoration(
-                hintText: "enter_task".tr(),
-                border: OutlineInputBorder(),
-              ),
-              style: TextStyle(fontSize: isWide ? 20 : 16),
             ),
-          );
-
-          final timeButton = ElevatedButton(
-            onPressed: _pickTime,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: Text(
-              _selectedTime == null
-                  ? 'pick_time'.tr()
-                  : 'Time: ${_selectedTime!.format(context)}',
-              style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.primary),
-            ),
-          );
-
-          final categoryDropdown = Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: DropdownButtonFormField<String>(
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
               value: _selectedCategory,
-              hint: Text("choose_category".tr()),
-              items: _categories
-                  .map((cat) => DropdownMenuItem<String>(
-                        value: cat,
-                        child: Text(cat),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedCategory = value;
-                });
-              },
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
-                ),
-              ),
-              style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 16),
-              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
+              hint: Text('selectCategory'.tr()),
+              items: _categories.map((category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Text(category),
+                );
+              }).toList(),
+              onChanged: (value) => setState(() => _selectedCategory = value),
             ),
-          );
-
-          final saveButton = Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: SizedBox(
-              width: isPortrait ? double.infinity : 200,
-              child: ElevatedButton(
-                onPressed: _saveTask,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  "save".tr(), 
-                  style: TextStyle(fontSize: isWide ? 20 : 18, color: Theme.of(context).colorScheme.onPrimary),
-                ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.access_time),
+              title: Text(
+                _selectedTime == null
+                    ? 'selectTime'.tr()
+                    : 'selectedTime'.tr(args: [_selectedTime!.format(context)]),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: _pickTime,
               ),
             ),
-          );
-
-          return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    textField,
-                    categoryDropdown,
-                    timeButton,
-                  ],
-                ),
-              ),
-              saveButton,
-            ],
-          );
-        },
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }

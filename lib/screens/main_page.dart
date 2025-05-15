@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'create_task.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'auth_service.dart';
+import 'create_task.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -10,295 +11,170 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class Task {
-  String text;
-  bool isDone;
-  DateTime? time;
-  String? category;
-
-  Task({
-    required this.text,
-    this.isDone = false,
-    this.time,
-    this.category,
-  });
-}
-
 class _MainPageState extends State<MainPage> {
-  final List<Task> _tasks = [];
-  late Timer _timer;
-
-  final Map<String, Color> _categoryColors = {
-    "Work": Colors.blue,
-    "Personal": Colors.orange,
-    "Shopping": Colors.green,
-    "Health": Colors.red,
-    "Learning": Colors.purple,
-    "Social": Colors.teal,
-    "Hobby": Colors.brown,
-    "Goals": Colors.pink,
-  };
-
   @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), _checkTasks);
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateToCreateTask(context),
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: auth.tasksStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final tasks = snapshot.data ?? [];
+
+          if (tasks.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                  const SizedBox(height: 16),
+                  Text(
+                    'noTasks'.tr(),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: tasks.length,
+            itemBuilder: (context, index) {
+              final task = tasks[index];
+              return _buildTaskItem(context, task, auth);
+            },
+          );
+        },
+      ),
+    );
   }
 
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
+  Widget _buildTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
+    final theme = Theme.of(context);
+    final isDone = task['isDone'] ?? false;
+    final time = task['time'] != null ? DateTime.fromMillisecondsSinceEpoch(task['time']) : null;
+    final isTimePassed = time != null && time.isBefore(DateTime.now());
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Checkbox(
+          value: isDone,
+          onChanged: (value) => auth.updateTask(task['id'], {'isDone': value}),
+          activeColor: Colors.deepPurple,
+        ),
+        title: Text(
+          task['text'],
+          style: TextStyle(
+            decoration: isDone ? TextDecoration.lineThrough : null,
+            color: isDone ? theme.disabledColor : theme.textTheme.bodyLarge?.color,
+          ),
+        ),
+        subtitle: task['category'] != null
+            ? Chip(
+          label: Text(task['category']),
+          backgroundColor: _getCategoryColor(task['category']),
+        )
+            : null,
+        trailing: time != null
+            ? Text(
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+          style: TextStyle(
+            color: isTimePassed ? Colors.red : theme.hintColor,
+          ),
+        )
+            : null,
+        onTap: () => _editTask(context, task, auth),
+        onLongPress: () => _deleteTask(context, task['id'], auth),
+      ),
+    );
   }
 
-  void _checkTasks(Timer timer) {
-    setState(() {
-      for (var task in _tasks) {
-        if (task.time != null && task.time!.isBefore(DateTime.now())) {
-          task.isDone = true;
-        }
-      }
-    });
+  Color _getCategoryColor(String? category) {
+    const colors = {
+      "Work": Colors.blue,
+      "Personal": Colors.orange,
+      "Shopping": Colors.green,
+      "Health": Colors.red,
+      "Learning": Colors.purple,
+      "Social": Colors.teal,
+      "Hobby": Colors.brown,
+      "Goals": Colors.pink,
+    };
+    return colors[category] ?? Colors.grey;
   }
 
-  void _navigateToCreateTask() async {
+  void _navigateToCreateTask(BuildContext context) async {
     final newTask = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const CreateTaskPage()),
     );
 
-    if (newTask != null && newTask is Map) {
-      final taskText = newTask['task'] as String?;
-      final taskTime = newTask['time'] as DateTime?;
-      final taskCategory = newTask['category'] as String?;
-
-      if (taskText != null) {
-        setState(() {
-          _tasks.add(Task(
-            text: taskText,
-            time: taskTime,
-            category: taskCategory,
-          ));
-        });
-      }
+    if (newTask != null && newTask is Map<String, dynamic>) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      await auth.addTask(newTask);
     }
   }
 
-  void _editTask(int index) async {
+  void _editTask(BuildContext context, Map<String, dynamic> task, AuthService auth) async {
     final editedTask = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateTaskPage(
-          initialText: _tasks[index].text,
-          initialTime: _tasks[index].time,
-          initialCategory: _tasks[index].category,
+          initialText: task['text'],
+          initialTime: task['time'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
+              : null,
+          initialCategory: task['category'],
         ),
       ),
     );
 
-    if (editedTask != null && editedTask is Map) {
-      final taskText = editedTask['task'] as String?;
-      final taskTime = editedTask['time'] as DateTime?;
-      final taskCategory = editedTask['category'] as String?;
-
-      if (taskText != null) {
-        setState(() {
-          _tasks[index].text = taskText;
-          _tasks[index].time = taskTime;
-          _tasks[index].category = taskCategory;
-        });
-      }
+    if (editedTask != null && editedTask is Map<String, dynamic>) {
+      await auth.updateTask(task['id'], editedTask);
     }
   }
 
-  void _deleteTask(int index) {
-    final deletedTask = _tasks[index];
-    setState(() {
-      _tasks.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Task "${deletedTask.text}" deleted'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateTask,
-        backgroundColor: Colors.deepPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            Widget content;
-            if (constraints.maxWidth < 600) {
-              content = buildMainContent(size, orientation, fontSize: 18, theme: theme);
-            } else if (constraints.maxWidth < 1000) {
-              content = buildMainContent(size, orientation, fontSize: 22, theme: theme);
-            } else {
-              content = Center(
-                child: SizedBox(
-                  width: 700,
-                  child: buildMainContent(size, orientation, fontSize: 26, theme: theme),
-                ),
-              );
-            }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: content,
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget buildMainContent(Size size, Orientation orientation,
-      {required double fontSize, required ThemeData theme}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Center(
-          child: Text(
-            tr("title"),
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
+  void _deleteTask(BuildContext context, String taskId, AuthService auth) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('confirmDelete'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('cancel'.tr()),
           ),
-        ),
-        const SizedBox(height: 20),
-        Expanded(
-          child: _tasks.isEmpty
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                    const SizedBox(height: 12),
-                    Text(
-                      tr("noTasks"),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = _tasks[index];
-                    final taskTime = task.time;
-                    final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
-
-                    return Dismissible(
-                      key: Key(task.text + index.toString()),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        color: Colors.redAccent,
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      onDismissed: (_) => _deleteTask(index),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            task.isDone = !task.isDone;
-                          });
-                        },
-                        onLongPress: () => _editTask(index),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                task.isDone
-                                    ? Icons.check_circle
-                                    : Icons.radio_button_unchecked,
-                                color: task.isDone ? Colors.green : Colors.deepPurple,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      task.text,
-                                      style: TextStyle(
-                                        fontSize: fontSize - 2,
-                                        decoration: task.isDone
-                                            ? TextDecoration.lineThrough
-                                            : TextDecoration.none,
-                                        color: task.isDone
-                                            ? theme.disabledColor
-                                            : theme.textTheme.bodyLarge?.color,
-                                      ),
-                                    ),
-                                    if (task.category != null)
-                                      Container(
-                                        margin: const EdgeInsets.only(top: 4),
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _categoryColors[task.category] ?? Colors.grey,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          task.category!,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      )
-                                  ],
-                                ),
-                              ),
-                              if (task.time != null)
-                                Text(
-                                  '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isTimePassed ? Colors.red : theme.hintColor,
-                                  ),
-                                )
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('delete'.tr(), style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
+
+    if (confirmed == true) {
+      await auth.deleteTask(taskId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('taskDeleted'.tr())),
+        );
+      }
+    }
   }
 }
