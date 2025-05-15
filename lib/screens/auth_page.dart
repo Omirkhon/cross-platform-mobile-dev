@@ -17,15 +17,11 @@ class _AuthPageState extends State<AuthPage> {
   final _passwordController = TextEditingController();
   bool _isLogin = true;
   bool _isLoading = false;
-  String? _errorMessage;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       if (_isLogin) {
@@ -39,34 +35,68 @@ class _AuthPageState extends State<AuthPage> {
           _passwordController.text.trim(),
         );
       }
-      // Navigate to home after successful auth
+      
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message;
-      });
+      _showErrorDialog(context, e.code);
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  Future<void> _signInAsGuest() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await _auth.signInAnonymously();
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+  void _showErrorDialog(BuildContext context, String errorCode) {
+    String message;
+    switch (errorCode) {
+      case 'user-not-found':
+        message = 'user_not_found'.tr();
+        break;
+      case 'wrong-password':
+        message = 'wrong_password'.tr();
+        break;
+      case 'email-already-in-use':
+        message = 'email_in_use'.tr();
+        break;
+      case 'weak-password':
+        message = 'weak_password'.tr();
+        break;
+      case 'invalid-email':
+        message = 'invalid_email'.tr();
+        break;
+      default:
+        message = 'auth_error'.tr();
     }
-    setState(() {
-      _isLoading = false;
-    });
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('error'.tr()),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('ok'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _signInAsGuest() async {
+    setState(() => _isLoading = true);
+    try {
+      await _auth.signInAnonymously();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -126,14 +156,6 @@ class _AuthPageState extends State<AuthPage> {
                         return null;
                       },
                     ),
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -146,22 +168,17 @@ class _AuthPageState extends State<AuthPage> {
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : Text(
-                          _isLogin ? 'login.button'.tr() : 'register.button'.tr(),
-                          style: const TextStyle(fontSize: 18),
-                        ),
+                                _isLogin ? 'login.button'.tr() : 'register.button'.tr(),
+                                style: const TextStyle(fontSize: 18),
+                              ),
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLogin = !_isLogin;
-                          _errorMessage = null;
-                        });
+                      onPressed: _isLoading ? null : () {
+                        setState(() => _isLogin = !_isLogin);
                       },
                       child: Text(
-                        _isLogin
-                            ? 'register.switch'.tr()
-                            : 'login.switch'.tr(),
+                        _isLogin ? 'register.switch'.tr() : 'login.switch'.tr(),
                       ),
                     ),
                     const SizedBox(height: 16),
