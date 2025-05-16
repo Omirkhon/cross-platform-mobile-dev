@@ -35,12 +35,12 @@
   "login": {
     "title": "Sign In",
     "button": "Sign In",
-    "switch": "Create an account"
+    "switch": "Already have an account?"
   },
   "register": {
     "title": "Sign Up",
     "button": "Register",
-    "switch": "Already have an account?"
+    "switch": "Create an account"
   },
   "guest": {
     "button": "Continue as Guest",

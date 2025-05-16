@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/auth',
           routes: {
             '/auth': (context) => const AuthPage(),
-            '/home': (context) => const MyHomePage(),
+            '/home': (context) => const MainPage(),
             '/about': (context) => const AboutPage2(),
             '/settings': (context) => const SettingsPage(),
             '/profile': (context) => ProfilePage(auth: Provider.of<AuthService>(context)),
@@ -113,57 +113,62 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
 
-  void _onItemTapped(int index) {
-    final auth = Provider.of<AuthService>(context, listen: false);
-    if (index == 3 && auth.isGuest) return;
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
     final isGuest = auth.isGuest;
 
+    // Define navigation items based on auth state
+    final navItems = [
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.home),
+        label: 'nav.home'.tr(),
+      ),
+      BottomNavigationBarItem(
+        icon: const Icon(Icons.info),
+        label: 'nav.about'.tr(),
+      ),
+      if (!isGuest) ...[
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.settings),
+          label: 'nav.settings'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person),
+          label: 'nav.profile'.tr(),
+        ),
+      ],
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: const <Widget>[
-          MainPage(),
-          AboutPage2(),
-          SettingsPage(),
+        children: [
+          const MainPage(),
+          const AboutPage2(),
+          if (!isGuest) ...[
+            const SettingsPage(),
+            ProfilePage(auth: auth),
+          ] else ...[
+            Container(), // Placeholder for settings
+            Container(), // Placeholder for profile
+          ],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
+        currentIndex: _currentIndex.clamp(0, navItems.length - 1),
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
-            label: 'nav.home'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.info),
-            label: 'nav.about'.tr(),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
-            label: 'nav.settings'.tr(),
-          ),
-          if (!isGuest)
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.person),
-              label: 'nav.profile'.tr(),
-            )
-          else
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
-              label: 'nav.guest'.tr(),
-            ),
-        ],
+        items: navItems,
+        onTap: (index) {
+          if (isGuest && index >= 2) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('guest_restriction'.tr())),
+            );
+            return;
+          }
+          setState(() => _currentIndex = index);
+        },
       ),
     );
   }

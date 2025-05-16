@@ -10,7 +10,7 @@ class AuthService with ChangeNotifier {
   User? get currentUser => _auth.currentUser;
 
   // Check if user is guest
-  bool get isGuest => currentUser == null || currentUser!.isAnonymous;
+  bool get isGuest => FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
 
   // Stream of user state changes
   Stream<User?> get userState => _auth.authStateChanges();

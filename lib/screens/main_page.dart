@@ -19,76 +19,114 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       floatingActionButton: auth.isGuest
           ? FloatingActionButton(
-              onPressed: () => _showGuestRestriction(context),
-              backgroundColor: Colors.orange,
-              child: const Icon(Icons.warning, color: Colors.white),
-            )
+        onPressed: () => _showGuestRestriction(context),
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.warning, color: Colors.white),
+      )
           : FloatingActionButton(
-              onPressed: () => _navigateToCreateTask(context),
-              backgroundColor: Colors.deepPurple,
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
-      body: auth.isGuest
-          ? _buildGuestRestriction(context)
-          : StreamBuilder<List<Map<String, dynamic>>>(
-              stream: auth.tasksStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final tasks = snapshot.data ?? [];
-
-                if (tasks.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                        const SizedBox(height: 16),
-                        Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) => _buildTaskItem(context, tasks[index], auth),
-                );
-              },
-            ),
-    );
-  }
-
-  Widget _buildGuestRestriction(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.warning, size: 64, color: Colors.orange),
-          const SizedBox(height: 20),
-          Text('guest_restriction'.tr(), 
-              style: const TextStyle(fontSize: 18),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context, '/auth', (route) => false),
-            child: Text('login.button'.tr()),
+        onPressed: () => _navigateToCreateTask(context),
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      bottomNavigationBar: auth.isGuest
+          ? null
+          : BottomNavigationBar(
+        currentIndex: 0, // Update based on navigation state if needed
+        onTap: (index) {
+          // Handle navigation tap
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Tasks',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),
+
+      body: auth.isGuest
+          ? _buildGuestRestriction(context)
+          : StreamBuilder<List<Map<String, dynamic>>>(
+        stream: auth.tasksStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final tasks = snapshot.data ?? [];
+
+          if (tasks.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                  const SizedBox(height: 16),
+                  Text('noTasks'.tr(),
+                      style: Theme.of(context).textTheme.bodyLarge),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: tasks.length,
+            itemBuilder: (context, index) =>
+                _buildSwipeableTaskItem(context, tasks[index], auth),
+          );
+        },
+      ),
     );
   }
 
-  void _showGuestRestriction(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('guest_restriction'.tr()),
-        duration: const Duration(seconds: 2),
+  Widget _buildSwipeableTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
+    return Dismissible(
+      key: Key(task['id']),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
       ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('confirmDelete'.tr()),
+            content: Text('deleteTaskConfirm'.tr(args: [task['text']])),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('delete'.tr(), style: const TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        auth.deleteTask(task['id']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('taskDeleted'.tr()),
+            action: SnackBarAction(
+              label: 'undo'.tr(),
+              onPressed: () {
+                // Note: Implementing undo would require keeping deleted tasks temporarily
+              },
+            ),
+          ),
+        );
+      },
+      child: _buildTaskItem(context, task, auth),
     );
   }
 
@@ -117,18 +155,47 @@ class _MainPageState extends State<MainPage> {
         ),
         subtitle: task['category'] != null
             ? Chip(
-                label: Text(task['category']),
-                backgroundColor: _getCategoryColor(task['category']),
-              )
+          label: Text(task['category']),
+          backgroundColor: _getCategoryColor(task['category']),
+        )
             : null,
         trailing: time != null
             ? Text(
-                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
-              )
+          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+          style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
+        )
             : null,
         onTap: () => _editTask(context, task, auth),
-        onLongPress: () => _deleteTask(context, task['id'], auth),
+      ),
+    );
+  }
+
+  Widget _buildGuestRestriction(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.warning, size: 64, color: Colors.orange),
+          const SizedBox(height: 20),
+          Text('guest_restriction'.tr(),
+              style: const TextStyle(fontSize: 18),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                context, '/auth', (route) => false),
+            child: Text('login.button'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGuestRestriction(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('guest_restriction'.tr()),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -175,34 +242,6 @@ class _MainPageState extends State<MainPage> {
 
     if (editedTask != null && editedTask is Map<String, dynamic>) {
       await auth.updateTask(task['id'], editedTask);
-    }
-  }
-
-  void _deleteTask(BuildContext context, String taskId, AuthService auth) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('confirmDelete'.tr()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('delete'.tr(), style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await auth.deleteTask(taskId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('taskDeleted'.tr())),
-        );
-      }
     }
   }
 }
