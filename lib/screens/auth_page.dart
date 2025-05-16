@@ -90,7 +90,7 @@ class _AuthPageState extends State<AuthPage> {
     try {
       await _auth.signInAnonymously();
       if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/guest', (route) => false);
       }
     } finally {
       if (mounted) {

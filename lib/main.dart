@@ -10,6 +10,7 @@ import 'screens/main_page.dart';
 import 'screens/settings_page.dart';
 import 'screens/auth_page.dart';
 import 'screens/profile_page.dart';
+import 'screens/guest_home_page.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -92,7 +93,8 @@ class MyApp extends StatelessWidget {
           initialRoute: '/auth',
           routes: {
             '/auth': (context) => const AuthPage(),
-            '/home': (context) => const MainPage(),
+            '/home': (context) => const MyHomePage(),
+            '/guest': (context) => const GuestHomePage(), // Add this line
             '/about': (context) => const AboutPage2(),
             '/settings': (context) => const SettingsPage(),
             '/profile': (context) => ProfilePage(auth: Provider.of<AuthService>(context)),

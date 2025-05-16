@@ -3,36 +3,51 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
+import 'auth_page.dart';
 
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+class GuestHomePage extends StatelessWidget {
+  const GuestHomePage({super.key});
 
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
 
     return Scaffold(
-      floatingActionButton: auth.isGuest
-          ? FloatingActionButton(
-        onPressed: () => _showGuestRestriction(context),
-        backgroundColor: Colors.orange,
-        child: const Icon(Icons.warning, color: Colors.white),
-      )
-          : FloatingActionButton(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Text('appTitle'.tr()),
+            const SizedBox(width: 8),
+            const Chip(
+              label: Text(
+                'GUEST',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              backgroundColor: Colors.orange,
+              padding: EdgeInsets.symmetric(horizontal: 8),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                  context, '/auth', (route) => false);
+            },
+            child: Text(
+              'login.button'.tr(),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToCreateTask(context),
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      bottomNavigationBar: null,
-
-      body: auth.isGuest
-          ? _buildGuestRestriction(context)
-          : StreamBuilder<List<Map<String, dynamic>>>(
+      body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: auth.tasksStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -48,8 +63,7 @@ class _MainPageState extends State<MainPage> {
                 children: [
                   const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
                   const SizedBox(height: 16),
-                  Text('noTasks'.tr(),
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
             );
@@ -58,8 +72,7 @@ class _MainPageState extends State<MainPage> {
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: tasks.length,
-            itemBuilder: (context, index) =>
-                _buildSwipeableTaskItem(context, tasks[index], auth),
+            itemBuilder: (context, index) => _buildSwipeableTaskItem(context, tasks[index], auth),
           );
         },
       ),
@@ -76,37 +89,10 @@ class _MainPageState extends State<MainPage> {
         color: Colors.red,
         child: const Icon(Icons.delete, color: Colors.white),
       ),
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('confirmDelete'.tr()),
-            content: Text('deleteTaskConfirm'.tr(args: [task['text']])),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('cancel'.tr()),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('delete'.tr(), style: const TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      },
       onDismissed: (direction) {
         auth.deleteTask(task['id']);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('taskDeleted'.tr()),
-            action: SnackBarAction(
-              label: 'undo'.tr(),
-              onPressed: () {
-                // Note: Implementing undo would require keeping deleted tasks temporarily
-              },
-            ),
-          ),
+          SnackBar(content: Text('taskDeleted'.tr())),
         );
       },
       child: _buildTaskItem(context, task, auth),
@@ -117,7 +103,6 @@ class _MainPageState extends State<MainPage> {
     final theme = Theme.of(context);
     final isDone = task['isDone'] ?? false;
     final time = task['time'] != null ? DateTime.fromMillisecondsSinceEpoch(task['time']) : null;
-    final isTimePassed = time != null && time.isBefore(DateTime.now());
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -143,42 +128,9 @@ class _MainPageState extends State<MainPage> {
         )
             : null,
         trailing: time != null
-            ? Text(
-          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-          style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
-        )
+            ? Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}')
             : null,
         onTap: () => _editTask(context, task, auth),
-      ),
-    );
-  }
-
-  Widget _buildGuestRestriction(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.warning, size: 64, color: Colors.orange),
-          const SizedBox(height: 20),
-          Text('guest_restriction'.tr(),
-              style: const TextStyle(fontSize: 18),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                context, '/auth', (route) => false),
-            child: Text('login.button'.tr()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showGuestRestriction(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('guest_restriction'.tr()),
-        duration: const Duration(seconds: 2),
       ),
     );
   }

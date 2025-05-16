@@ -16,8 +16,12 @@ class AuthService with ChangeNotifier {
   Stream<User?> get userState => _auth.authStateChanges();
 
   // Stream of tasks for the current user
+  // Modify these methods in AuthService:
   Stream<List<Map<String, dynamic>>> get tasksStream {
-    if (isGuest) return const Stream.empty();
+    if (isGuest) {
+      // For guests, use a local stream or empty stream
+      return const Stream.empty();
+    }
     return _firestore
         .collection('users')
         .doc(currentUser!.uid)
@@ -28,6 +32,24 @@ class AuthService with ChangeNotifier {
         .map((doc) => doc.data()..['id'] = doc.id)
         .toList());
   }
+
+  Future<void> addTask(Map<String, dynamic> task) async {
+    if (isGuest) {
+      // For guests, you might want to store tasks locally
+      // For now, we'll just allow the operation without persistence
+      return;
+    }
+    await _firestore
+        .collection('users')
+        .doc(currentUser!.uid)
+        .collection('tasks')
+        .add({
+      ...task,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+// Similar modifications for updateTask and deleteTask
 
   // Sign in with email and password
   Future<UserCredential> signInWithEmailPassword(String email, String password) async {
@@ -72,19 +94,6 @@ class AuthService with ChangeNotifier {
   // Sign in anonymously
   Future<UserCredential> signInAnonymously() async {
     return await _auth.signInAnonymously();
-  }
-
-  // Task operations
-  Future<void> addTask(Map<String, dynamic> task) async {
-    if (isGuest) return;
-    await _firestore
-        .collection('users')
-        .doc(currentUser!.uid)
-        .collection('tasks')
-        .add({
-      ...task,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
   }
 
   Future<void> updateTask(String taskId, Map<String, dynamic> updates) async {
