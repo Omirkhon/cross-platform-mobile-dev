@@ -86,5 +86,6 @@
   
  
   "guest_restriction": "Please sign in to access all features. Guest users have limited functionality.",
-  "ok": "OK"
+  "ok": "OK",
+  "pleaseLogin": "Please log in to use this feature"
 }

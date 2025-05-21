@@ -11,6 +11,7 @@ import 'screens/settings_page.dart';
 import 'screens/auth_page.dart';
 import 'screens/profile_page.dart';
 import 'screens/guest_home_page.dart';
+import 'screens/connectivity_service.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -40,8 +41,11 @@ void main() async {
         supportedLocales: const [Locale('en'), Locale('ru'), Locale('kk')],
         path: 'assets/translation',
         fallbackLocale: const Locale('en'),
-        child: ChangeNotifierProvider(
-          create: (context) => AuthService(),
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => AuthService()),
+            ChangeNotifierProvider(create: (_) => ConnectivityService()),
+          ],
           child: const MyApp(),
         ),
       ),
@@ -119,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
     final isGuest = auth.isGuest;
+    final isOffline = context.watch<ConnectivityService>().isOffline;
 
     final navItems = [
       BottomNavigationBarItem(
@@ -138,17 +143,38 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
+      body: Column(
         children: [
-          const MainPage(),
-          const AboutPage2(),
-          if (!isGuest)
-            const SettingsPage()
-          else
-            Container(),
+          if (isOffline)
+          Container(
+            width: double.infinity,
+            color: Colors.red,
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              'You are offline',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _currentIndex,
+              children: [
+                const MainPage(),
+                const AboutPage2(),
+                if (!isGuest)
+                  const SettingsPage()
+                else
+                  Container(),
+              ],
+            ),
+          ),
         ],
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex.clamp(0, navItems.length - 1),
         selectedItemColor: Colors.deepPurple,

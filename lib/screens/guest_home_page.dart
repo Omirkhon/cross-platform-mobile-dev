@@ -119,7 +119,13 @@ class GuestHomePage extends StatelessWidget {
       child: ListTile(
         leading: Checkbox(
           value: isDone,
-          onChanged: (v) => auth.updateTask(task['id'], {'isDone': v}),
+          onChanged: auth.isGuest
+              ? (_) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('pleaseLogin'.tr())),
+                  );
+                }
+              : (v) => auth.updateTask(task['id'], {'isDone': v}),
           activeColor: Colors.deepPurple,
         ),
         title: Column(

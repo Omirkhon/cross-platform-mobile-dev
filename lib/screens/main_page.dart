@@ -53,7 +53,12 @@ class MainPage extends StatefulWidget {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
                         }
-                        final tasks = snapshot.data ?? [];
+                        final tasks = (snapshot.data ?? [])
+                        ..sort((a, b) {
+                          final aDone = a['isDone'] ?? false;
+                          final bDone = b['isDone'] ?? false;
+                          return aDone == bDone ? 0 : (aDone ? 1 : -1);
+                        });
                         if (tasks.isEmpty) {
                           return Center(
                             child: Column(
