@@ -1,26 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Get current user
   User? get currentUser => _auth.currentUser;
-
-  // Check if user is guest
   bool get isGuest => FirebaseAuth.instance.currentUser?.isAnonymous ?? false;
-
-  // Stream of user state changes
   Stream<User?> get userState => _auth.authStateChanges();
 
-  // Stream of tasks for the current user
-  // Modify these methods in AuthService:
+  final List<Map<String, dynamic>> _guestTasks = [];
+  final StreamController<List<Map<String, dynamic>>> _guestTasksController = StreamController<List<Map<String, dynamic>>>.broadcast();
+
   Stream<List<Map<String, dynamic>>> get tasksStream {
     if (isGuest) {
-      // For guests, use a local stream or empty stream
-      return const Stream.empty();
+      return _guestTasksController.stream;
     }
     return _firestore
         .collection('users')
@@ -29,14 +24,19 @@ class AuthService with ChangeNotifier {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-        .map((doc) => doc.data()..['id'] = doc.id)
-        .toList());
+          .map((doc) => doc.data()..['id'] = doc.id)
+          .toList());
   }
 
   Future<void> addTask(Map<String, dynamic> task) async {
     if (isGuest) {
-      // For guests, you might want to store tasks locally
-      // For now, we'll just allow the operation without persistence
+      final newTask = {
+        ...task,
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+      };
+      _guestTasks.add(newTask);
+      _guestTasksController.add(List.from(_guestTasks));
       return;
     }
     await _firestore
@@ -48,10 +48,13 @@ class AuthService with ChangeNotifier {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+  
+  @override
+  void dispose() {
+    _guestTasksController.close();
+    super.dispose();
+  }
 
-// Similar modifications for updateTask and deleteTask
-
-  // Sign in with email and password
   Future<UserCredential> signInWithEmailPassword(String email, String password) async {
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(

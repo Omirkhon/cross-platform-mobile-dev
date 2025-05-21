@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
+import 'package:provider/provider.dart';
+
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -11,7 +13,12 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final AuthService _auth = AuthService();
+  late final AuthService _auth;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _auth = Provider.of<AuthService>(context, listen: false);
+  }
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();

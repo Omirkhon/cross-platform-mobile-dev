@@ -12,8 +12,13 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = auth.currentUser;
     final isGuest = auth.isGuest;
-
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -52,7 +57,6 @@ class ProfilePage extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () async {
                 await auth.signOut();
-// Navigate back to auth page
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/auth',

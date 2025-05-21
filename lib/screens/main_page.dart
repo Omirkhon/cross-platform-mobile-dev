@@ -11,59 +11,77 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
-  @override
-  Widget build(BuildContext context) {
-    final auth = Provider.of<AuthService>(context);
+  class _MainPageState extends State<MainPage> {
+    @override
+    Widget build(BuildContext context) {
+      final auth = Provider.of<AuthService>(context);
 
-    return Scaffold(
-      floatingActionButton: auth.isGuest
-          ? FloatingActionButton(
-        onPressed: () => _showGuestRestriction(context),
-        backgroundColor: Colors.orange,
-        child: const Icon(Icons.warning, color: Colors.white),
-      )
-          : FloatingActionButton(
-        onPressed: () => _navigateToCreateTask(context),
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      bottomNavigationBar: null,
+      return Scaffold(
+        floatingActionButton: auth.isGuest
+            ? FloatingActionButton(
+                onPressed: () => _showGuestRestriction(context),
+                backgroundColor: Colors.orange,
+                child: const Icon(Icons.warning, color: Colors.white),
+              )
+            : FloatingActionButton(
+                onPressed: () => _navigateToCreateTask(context),
+                backgroundColor: Colors.deepPurple,
+                child: const Icon(Icons.add, color: Colors.white),
+              ),
+        bottomNavigationBar: null,
 
-      body: auth.isGuest
-          ? _buildGuestRestriction(context)
-          : StreamBuilder<List<Map<String, dynamic>>>(
-        stream: auth.tasksStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final tasks = snapshot.data ?? [];
-
-          if (tasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+        body: auth.isGuest
+            ? _buildGuestRestriction(context)
+            : Column(
                 children: [
-                  const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                  const SizedBox(height: 16),
-                  Text('noTasks'.tr(),
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      'title'.tr(), 
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: StreamBuilder<List<Map<String, dynamic>>>(
+                      stream: auth.tasksStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final tasks = snapshot.data ?? [];
+                        if (tasks.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'noTasks'.tr(),
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: tasks.length,
+                          itemBuilder: (context, index) =>
+                              _buildSwipeableTaskItem(context, tasks[index], auth),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) =>
-                _buildSwipeableTaskItem(context, tasks[index], auth),
-          );
-        },
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildSwipeableTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
@@ -103,7 +121,6 @@ class _MainPageState extends State<MainPage> {
             action: SnackBarAction(
               label: 'undo'.tr(),
               onPressed: () {
-                // Note: Implementing undo would require keeping deleted tasks temporarily
               },
             ),
           ),
@@ -118,30 +135,52 @@ class _MainPageState extends State<MainPage> {
     final isDone = task['isDone'] ?? false;
     final time = task['time'] != null ? DateTime.fromMillisecondsSinceEpoch(task['time']) : null;
     final isTimePassed = time != null && time.isBefore(DateTime.now());
+    final baseStyle = theme.textTheme.bodyLarge!;
+    final textStyle = isDone
+      ? baseStyle.copyWith(
+          decoration: TextDecoration.lineThrough,
+          color: baseStyle.color!.withOpacity(0.5),
+        )
+      : baseStyle;
+    
+    final cardColor = isDone
+      ? theme.colorScheme.surfaceVariant
+      : theme.cardColor;
+    final elevation = isDone ? 0.0 : 2.0;
 
     return Card(
+      color: cardColor,
+      elevation: elevation,
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Checkbox(
           value: isDone,
-          onChanged: (value) => auth.updateTask(task['id'], {'isDone': value}),
+          // onChanged: (value) => auth.updateTask(task['id'], {'isDone': value}),
+          onChanged: (v) => auth.updateTask(task['id'], {'isDone': v}),
           activeColor: Colors.deepPurple,
         ),
-        title: Text(
-          task['text'],
-          style: TextStyle(
-            decoration: isDone ? TextDecoration.lineThrough : null,
-            color: isDone ? theme.disabledColor : theme.textTheme.bodyLarge?.color,
-          ),
-        ),
-        subtitle: task['category'] != null
-            ? Chip(
-          label: Text(task['category']),
-          backgroundColor: _getCategoryColor(task['category']),
-        )
-            : null,
+
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              task['text'],
+              style: theme.textTheme.bodyLarge!.copyWith(
+                decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+              ),
+            ),
+            if (task['category'] != null) ...[
+            const SizedBox(height: 4),
+            Chip(
+              label: Text(task['category']),
+              backgroundColor: _getCategoryColor(task['category']),
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            ),
+          ],
+      ],
+    ),
         trailing: time != null
             ? Text(
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
@@ -227,4 +266,3 @@ class _MainPageState extends State<MainPage> {
       await auth.updateTask(task['id'], editedTask);
     }
   }
-}

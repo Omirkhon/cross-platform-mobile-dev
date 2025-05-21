@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
-import 'auth_page.dart';
+// import 'auth_page.dart';
 
 class GuestHomePage extends StatelessWidget {
   const GuestHomePage({super.key});
@@ -16,8 +16,6 @@ class GuestHomePage extends StatelessWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            Text('appTitle'.tr()),
-            const SizedBox(width: 8),
             const Chip(
               label: Text(
                 'GUEST',
@@ -103,37 +101,49 @@ class GuestHomePage extends StatelessWidget {
     final theme = Theme.of(context);
     final isDone = task['isDone'] ?? false;
     final time = task['time'] != null ? DateTime.fromMillisecondsSinceEpoch(task['time']) : null;
+    final baseStyle = theme.textTheme.bodyLarge!;
+    final textStyle = isDone
+        ? baseStyle.copyWith(
+            decoration: TextDecoration.lineThrough,
+            color: baseStyle.color!.withOpacity(0.5),
+          )
+        : baseStyle;
+    final cardColor = isDone ? theme.colorScheme.surfaceVariant : theme.cardColor;
+    final elevation = isDone ? 0.0 : 2.0;
 
     return Card(
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      elevation: elevation,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Checkbox(
           value: isDone,
-          onChanged: (value) => auth.updateTask(task['id'], {'isDone': value}),
+          onChanged: (v) => auth.updateTask(task['id'], {'isDone': v}),
           activeColor: Colors.deepPurple,
         ),
-        title: Text(
-          task['text'],
-          style: TextStyle(
-            decoration: isDone ? TextDecoration.lineThrough : null,
-            color: isDone ? theme.disabledColor : theme.textTheme.bodyLarge?.color,
-          ),
-        ),
-        subtitle: task['category'] != null
-            ? Chip(
-          label: Text(task['category']),
-          backgroundColor: _getCategoryColor(task['category']),
-        )
-            : null,
-        trailing: time != null
-            ? Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}')
-            : null,
-        onTap: () => _editTask(context, task, auth),
+        title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(task['text'], style: textStyle),
+          if (task['category'] != null) ...[
+            const SizedBox(height: 4),
+            Chip(
+              label: Text(task['category']),
+              backgroundColor: _getCategoryColor(task['category']),
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+            ),
+          ],
+        ],
       ),
-    );
-  }
+      trailing: time != null
+          ? Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}')
+          : null,
+      onTap: () => _editTask(context, task, auth),
+    ),
+  );
+}
 
   Color _getCategoryColor(String? category) {
     const colors = {

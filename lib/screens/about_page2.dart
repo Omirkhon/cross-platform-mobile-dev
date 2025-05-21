@@ -30,17 +30,17 @@ class AboutPage2 extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
               Text(
                 "description".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: isWide ? 20 : 18),
+                style: TextStyle(fontSize: isWide ? 20 : 18 , height: 1.4,), 
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
               Text(
                 "credits".tr(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 12 , height: 1.5,),
               ),
             ],
           );

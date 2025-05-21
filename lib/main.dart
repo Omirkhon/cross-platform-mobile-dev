@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
           routes: {
             '/auth': (context) => const AuthPage(),
             '/home': (context) => const MyHomePage(),
-            '/guest': (context) => const GuestHomePage(), // Add this line
+            '/guest': (context) => const GuestHomePage(),
             '/about': (context) => const AboutPage2(),
             '/settings': (context) => const SettingsPage(),
             '/profile': (context) => ProfilePage(auth: Provider.of<AuthService>(context)),
@@ -120,7 +120,6 @@ class _MyHomePageState extends State<MyHomePage> {
     final auth = Provider.of<AuthService>(context);
     final isGuest = auth.isGuest;
 
-    // Define navigation items based on auth state
     final navItems = [
       BottomNavigationBarItem(
         icon: const Icon(Icons.home),
@@ -135,10 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
           icon: const Icon(Icons.settings),
           label: 'nav.settings'.tr(),
         ),
-        BottomNavigationBarItem(
-          icon: const Icon(Icons.person),
-          label: 'nav.profile'.tr(),
-        ),
       ],
     ];
 
@@ -148,13 +143,10 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           const MainPage(),
           const AboutPage2(),
-          if (!isGuest) ...[
-            const SettingsPage(),
-            ProfilePage(auth: auth),
-          ] else ...[
-            Container(), // Placeholder for settings
-            Container(), // Placeholder for profile
-          ],
+          if (!isGuest)
+            const SettingsPage()
+          else
+            Container(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
