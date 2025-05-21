@@ -1,9 +1,9 @@
-import 'package:cross_platform_mobile_dev/screens/auth_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'screens/about_page2.dart';
 import 'screens/main_page.dart';
@@ -12,6 +12,8 @@ import 'screens/auth_page.dart';
 import 'screens/profile_page.dart';
 import 'screens/guest_home_page.dart';
 import 'screens/connectivity_service.dart';
+import 'screens/auth_service.dart';
+import 'screens/sync_banner.dart'; // Add this import
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -19,6 +21,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    // Initialize Hive for local storage
+    await Hive.initFlutter();
+    await Hive.openBox('localStorage');
+    await Hive.openBox('preferences');
+
     if (kIsWeb) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
@@ -43,7 +50,7 @@ void main() async {
         fallbackLocale: const Locale('en'),
         child: MultiProvider(
           providers: [
-            ChangeNotifierProvider(create: (_) => AuthService()),
+            ChangeNotifierProvider(create: (context) => AuthService(context)),
             ChangeNotifierProvider(create: (_) => ConnectivityService()),
           ],
           child: const MyApp(),
@@ -51,7 +58,7 @@ void main() async {
       ),
     );
   } catch (e) {
-    debugPrint("Firebase initialization error: $e");
+    debugPrint("Initialization error: $e");
   }
 }
 
@@ -145,20 +152,21 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
+          if (!isGuest) const SyncBanner(), // Add SyncBanner here
           if (isOffline)
-          Container(
-            width: double.infinity,
-            color: Colors.red,
-            padding: const EdgeInsets.all(12),
-            child: Text(
-              'You are offline',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            Container(
+              width: double.infinity,
+              color: Colors.red,
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                'offline_mode'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
           Expanded(
             child: IndexedStack(
               index: _currentIndex,
@@ -174,7 +182,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex.clamp(0, navItems.length - 1),
         selectedItemColor: Colors.deepPurple,

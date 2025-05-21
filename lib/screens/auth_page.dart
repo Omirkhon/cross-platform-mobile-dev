@@ -25,6 +25,21 @@ class _AuthPageState extends State<AuthPage> {
   bool _isLogin = true;
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkPersistedUser();
+  }
+
+  Future<void> _checkPersistedUser() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.isAnonymous) {
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+      }
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -42,7 +57,7 @@ class _AuthPageState extends State<AuthPage> {
           _passwordController.text.trim(),
         );
       }
-      
+
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
       }
@@ -175,9 +190,9 @@ class _AuthPageState extends State<AuthPage> {
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : Text(
-                                _isLogin ? 'login.button'.tr() : 'register.button'.tr(),
-                                style: const TextStyle(fontSize: 18),
-                              ),
+                          _isLogin ? 'login.button'.tr() : 'register.button'.tr(),
+                          style: const TextStyle(fontSize: 18),
+                        ),
                       ),
                     ),
                     TextButton(

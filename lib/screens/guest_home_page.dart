@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
-// import 'auth_page.dart';
+import 'connectivity_service.dart';
+import 'sync_banner.dart';
 
 class GuestHomePage extends StatelessWidget {
   const GuestHomePage({super.key});
@@ -11,6 +12,7 @@ class GuestHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
+    final isOffline = context.watch<ConnectivityService>().isOffline;
 
     return Scaffold(
       appBar: AppBar(
@@ -24,6 +26,11 @@ class GuestHomePage extends StatelessWidget {
               backgroundColor: Colors.orange,
               padding: EdgeInsets.symmetric(horizontal: 8),
             ),
+            if (isOffline)
+              const Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Icon(Icons.cloud_off, color: Colors.white),
+              ),
           ],
         ),
         actions: [
@@ -39,40 +46,46 @@ class GuestHomePage extends StatelessWidget {
           ),
         ],
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToCreateTask(context),
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: auth.tasksStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          if (auth.shouldShowSyncButton) const SyncBanner(),
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: auth.tasksStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          final tasks = snapshot.data ?? [];
+                final tasks = snapshot.data ?? [];
 
-          if (tasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                  const SizedBox(height: 16),
-                  Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
-                ],
-              ),
-            );
-          }
+                if (tasks.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                        const SizedBox(height: 16),
+                        Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
+                      ],
+                    ),
+                  );
+                }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: tasks.length,
-            itemBuilder: (context, index) => _buildSwipeableTaskItem(context, tasks[index], auth),
-          );
-        },
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) => _buildSwipeableTaskItem(context, tasks[index], auth),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -104,9 +117,9 @@ class GuestHomePage extends StatelessWidget {
     final baseStyle = theme.textTheme.bodyLarge!;
     final textStyle = isDone
         ? baseStyle.copyWith(
-            decoration: TextDecoration.lineThrough,
-            color: baseStyle.color!.withOpacity(0.5),
-          )
+      decoration: TextDecoration.lineThrough,
+      color: baseStyle.color!.withOpacity(0.5),
+    )
         : baseStyle;
     final cardColor = isDone ? theme.colorScheme.surfaceVariant : theme.cardColor;
     final elevation = isDone ? 0.0 : 2.0;
@@ -121,35 +134,35 @@ class GuestHomePage extends StatelessWidget {
           value: isDone,
           onChanged: auth.isGuest
               ? (_) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('pleaseLogin'.tr())),
-                  );
-                }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('pleaseLogin'.tr())),
+            );
+          }
               : (v) => auth.updateTask(task['id'], {'isDone': v}),
           activeColor: Colors.deepPurple,
         ),
         title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(task['text'], style: textStyle),
-          if (task['category'] != null) ...[
-            const SizedBox(height: 4),
-            Chip(
-              label: Text(task['category']),
-              backgroundColor: _getCategoryColor(task['category']),
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-            ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(task['text'], style: textStyle),
+            if (task['category'] != null) ...[
+              const SizedBox(height: 4),
+              Chip(
+                label: Text(task['category']),
+                backgroundColor: _getCategoryColor(task['category']),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              ),
+            ],
           ],
-        ],
+        ),
+        trailing: time != null
+            ? Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}')
+            : null,
+        onTap: () => _editTask(context, task, auth),
       ),
-      trailing: time != null
-          ? Text('${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}')
-          : null,
-      onTap: () => _editTask(context, task, auth),
-    ),
-  );
-}
+    );
+  }
 
   Color _getCategoryColor(String? category) {
     const colors = {

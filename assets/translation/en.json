@@ -87,5 +87,13 @@
  
   "guest_restriction": "Please sign in to access all features. Guest users have limited functionality.",
   "ok": "OK",
-  "pleaseLogin": "Please log in to use this feature"
+  "pleaseLogin": "Please log in to use this feature",
+
+  "offline_mode": "Working in offline mode",
+  "offline_mode_profile": "Profile data may be outdated in offline mode",
+  "sync_button": "Sync Data",
+  "syncing": "Syncing...",
+  "sync_complete": "Sync complete",
+  "sync_failed": "Sync failed",
+  "persistent_login": "Stay logged in"
 }

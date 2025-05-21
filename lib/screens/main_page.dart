@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
+import 'sync_banner.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -11,33 +12,36 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-  class _MainPageState extends State<MainPage> {
-    @override
-    Widget build(BuildContext context) {
-      final auth = Provider.of<AuthService>(context);
+class _MainPageState extends State<MainPage> {
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
 
-      return Scaffold(
-        floatingActionButton: auth.isGuest
-            ? FloatingActionButton(
-                onPressed: () => _showGuestRestriction(context),
-                backgroundColor: Colors.orange,
-                child: const Icon(Icons.warning, color: Colors.white),
-              )
-            : FloatingActionButton(
-                onPressed: () => _navigateToCreateTask(context),
-                backgroundColor: Colors.deepPurple,
-                child: const Icon(Icons.add, color: Colors.white),
-              ),
-        bottomNavigationBar: null,
-
-        body: auth.isGuest
-            ? _buildGuestRestriction(context)
-            : Column(
+    return Scaffold(
+      floatingActionButton: auth.isGuest
+          ? FloatingActionButton(
+        onPressed: () => _showGuestRestriction(context),
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.warning, color: Colors.white),
+      )
+          : FloatingActionButton(
+        onPressed: () => _navigateToCreateTask(context),
+        backgroundColor: Colors.deepPurple,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: Column(
+        children: [
+          if (auth.shouldShowSyncButton) const SyncBanner(),
+          if (auth.isGuest)
+            _buildGuestRestriction(context)
+          else
+            Expanded(
+              child: Column(
                 children: [
                   const SizedBox(height: 20),
                   Center(
                     child: Text(
-                      'title'.tr(), 
+                      'title'.tr(),
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -54,11 +58,11 @@ class MainPage extends StatefulWidget {
                           return const Center(child: CircularProgressIndicator());
                         }
                         final tasks = (snapshot.data ?? [])
-                        ..sort((a, b) {
-                          final aDone = a['isDone'] ?? false;
-                          final bDone = b['isDone'] ?? false;
-                          return aDone == bDone ? 0 : (aDone ? 1 : -1);
-                        });
+                          ..sort((a, b) {
+                            final aDone = a['isDone'] ?? false;
+                            final bDone = b['isDone'] ?? false;
+                            return aDone == bDone ? 0 : (aDone ? 1 : -1);
+                          });
                         if (tasks.isEmpty) {
                           return Center(
                             child: Column(
@@ -85,8 +89,10 @@ class MainPage extends StatefulWidget {
                   ),
                 ],
               ),
-      );
-    }
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildSwipeableTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
@@ -126,6 +132,7 @@ class MainPage extends StatefulWidget {
             action: SnackBarAction(
               label: 'undo'.tr(),
               onPressed: () {
+                // Note: Undo functionality would need to be implemented
               },
             ),
           ),
@@ -142,15 +149,15 @@ class MainPage extends StatefulWidget {
     final isTimePassed = time != null && time.isBefore(DateTime.now());
     final baseStyle = theme.textTheme.bodyLarge!;
     final textStyle = isDone
-      ? baseStyle.copyWith(
-          decoration: TextDecoration.lineThrough,
-          color: baseStyle.color!.withOpacity(0.5),
-        )
-      : baseStyle;
-    
+        ? baseStyle.copyWith(
+      decoration: TextDecoration.lineThrough,
+      color: baseStyle.color!.withOpacity(0.5),
+    )
+        : baseStyle;
+
     final cardColor = isDone
-      ? theme.colorScheme.surfaceVariant
-      : theme.cardColor;
+        ? theme.colorScheme.surfaceVariant
+        : theme.cardColor;
     final elevation = isDone ? 0.0 : 2.0;
 
     return Card(
@@ -161,11 +168,9 @@ class MainPage extends StatefulWidget {
       child: ListTile(
         leading: Checkbox(
           value: isDone,
-          // onChanged: (value) => auth.updateTask(task['id'], {'isDone': value}),
           onChanged: (v) => auth.updateTask(task['id'], {'isDone': v}),
           activeColor: Colors.deepPurple,
         ),
-
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -176,16 +181,16 @@ class MainPage extends StatefulWidget {
               ),
             ),
             if (task['category'] != null) ...[
-            const SizedBox(height: 4),
-            Chip(
-              label: Text(task['category']),
-              backgroundColor: _getCategoryColor(task['category']),
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-            ),
+              const SizedBox(height: 4),
+              Chip(
+                label: Text(task['category']),
+                backgroundColor: _getCategoryColor(task['category']),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              ),
+            ],
           ],
-      ],
-    ),
+        ),
         trailing: time != null
             ? Text(
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
@@ -271,3 +276,4 @@ class MainPage extends StatefulWidget {
       await auth.updateTask(task['id'], editedTask);
     }
   }
+}
