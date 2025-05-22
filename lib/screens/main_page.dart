@@ -149,7 +149,7 @@ class _MainPageState extends State<MainPage> {
                             .where((t) => t['deleted'] != true)
                             .toList();
 
-                        // Фильтрация
+                        
                         tasks = tasks.where((task) {
                           final text = (task['text'] ?? '').toLowerCase();
                           final matchText = searchQuery.isEmpty || text.contains(searchQuery);
@@ -166,7 +166,7 @@ class _MainPageState extends State<MainPage> {
                           return matchText && matchCategory && matchDate;
                         }).toList();
 
-                        // Сортировка: незавершённые вверху
+                        
                         tasks.sort((a, b) {
                           final aDone = a['isDone'] ?? false;
                           final bDone = b['isDone'] ?? false;

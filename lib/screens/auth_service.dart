@@ -41,12 +41,12 @@ class AuthService with ChangeNotifier {
   }
 
   void _initConnectivity() {
-    // Get initial connectivity state
+    
     Connectivity().checkConnectivity().then((result) {
       _handleConnectivityChange(result);
     });
 
-    // Listen for changes
+    
     Connectivity().onConnectivityChanged.listen(_handleConnectivityChange);
   }
 
@@ -74,11 +74,11 @@ class AuthService with ChangeNotifier {
       return;
     }
 
-    // When coming back online, check for pending sync
+   
     final localTasks = _localStorage.get('tasks', defaultValue: []);
     if (localTasks.isNotEmpty) {
       _hasPendingSync = true;
-      _shouldShowSyncButton = true; // Show the sync button
+      _shouldShowSyncButton = true; 
       notifyListeners();
     }
   }
@@ -89,7 +89,7 @@ class AuthService with ChangeNotifier {
       return;
     }
 
-    // Check if we have cached data
+   
     final cachedTasks = _localStorage.get('tasks', defaultValue: []);
     if (cachedTasks is List && cachedTasks.isNotEmpty) {
       yield cachedTasks.cast<Map<String, dynamic>>();
@@ -120,13 +120,13 @@ class AuthService with ChangeNotifier {
       return;
     }
 
-    // Add to local storage first
+    
     final localTasks = List<Map<String, dynamic>>.from(
         _localStorage.get('tasks', defaultValue: []));
     localTasks.add(newTask);
     await _localStorage.put('tasks', localTasks);
 
-    // Try to sync if online
+   
     await syncData();
   }
 
@@ -156,12 +156,12 @@ class AuthService with ChangeNotifier {
         await batch.commit();
         await _localStorage.put('tasks', []);
         _hasPendingSync = false;
-        _shouldShowSyncButton = false; // Hide the sync button after successful sync
+        _shouldShowSyncButton = false; 
         notifyListeners();
       }
     } catch (e) {
       debugPrint('Sync error: $e');
-      // Keep the sync button visible if sync fails
+      
       _shouldShowSyncButton = true;
       notifyListeners();
       rethrow;
@@ -220,7 +220,7 @@ class AuthService with ChangeNotifier {
   Future<void> updateTask(String taskId, Map<String, dynamic> updates) async {
     if (isGuest) return;
 
-    // Update local storage first
+    
     final localTasks = List<Map<String, dynamic>>.from(
         _localStorage.get('tasks', defaultValue: []));
     final taskIndex = localTasks.indexWhere((t) => t['id'] == taskId);
@@ -230,7 +230,7 @@ class AuthService with ChangeNotifier {
       await _localStorage.put('tasks', localTasks);
     }
 
-    // Try to sync with Firebase
+    
     try {
       await _firestore
           .collection('users')
@@ -243,27 +243,6 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  // Future<void> deleteTask(String taskId) async {
-  //   if (isGuest) return;
-
-  //   // Remove from local storage first
-  //   final localTasks = List<Map<String, dynamic>>.from(
-  //       _localStorage.get('tasks', defaultValue: []));
-  //   localTasks.removeWhere((t) => t['id'] == taskId);
-  //   await _localStorage.put('tasks', localTasks);
-
-  //   // Try to sync with Firebase
-  //   try {
-  //     await _firestore
-  //         .collection('users')
-  //         .doc(currentUser!.uid)
-  //         .collection('tasks')
-  //         .doc(taskId)
-  //         .delete();
-  //   } catch (e) {
-  //     debugPrint('Failed to delete task: $e');
-  //   }
-  // }
 
   Future<void> deleteTask(String taskId) async {
     if (isGuest) return;
@@ -295,11 +274,11 @@ class AuthService with ChangeNotifier {
   }) async {
     if (isGuest) return;
 
-    // Update local storage immediately
+   
     if (theme != null) await _prefsBox.put('theme', theme);
     if (language != null) await _prefsBox.put('language', language);
 
-    // Try to sync with Firebase
+    
     try {
       await _firestore
           .collection('users')
@@ -316,13 +295,13 @@ class AuthService with ChangeNotifier {
   Future<Map<String, dynamic>> getUserPreferences() async {
     if (isGuest) return {};
 
-    // First try to get from local storage
+    
     final localPrefs = {
       'theme': _prefsBox.get('theme', defaultValue: 'system'),
       'language': _prefsBox.get('language', defaultValue: 'en'),
     };
 
-    // Then try to sync with Firebase
+   
     try {
       DocumentSnapshot snapshot = await _firestore
           .collection('users')
@@ -331,7 +310,7 @@ class AuthService with ChangeNotifier {
 
       final firebasePrefs = snapshot.data() as Map<String, dynamic>? ?? {};
 
-      // Merge preferences (Firebase overrides local)
+      
       return {...localPrefs, ...firebasePrefs};
     } catch (e) {
       return localPrefs;

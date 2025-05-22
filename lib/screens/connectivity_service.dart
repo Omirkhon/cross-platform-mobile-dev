@@ -10,11 +10,11 @@ class ConnectivityService with ChangeNotifier {
   }
 
   Future<void> _init() async {
-    // Check initial state
+    
     final result = await Connectivity().checkConnectivity();
     _updateStatus(result);
 
-    // Listen for changes
+    
     Connectivity().onConnectivityChanged.listen(_updateStatus);
   }
 
