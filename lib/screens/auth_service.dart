@@ -243,27 +243,51 @@ class AuthService with ChangeNotifier {
     }
   }
 
+  // Future<void> deleteTask(String taskId) async {
+  //   if (isGuest) return;
+
+  //   // Remove from local storage first
+  //   final localTasks = List<Map<String, dynamic>>.from(
+  //       _localStorage.get('tasks', defaultValue: []));
+  //   localTasks.removeWhere((t) => t['id'] == taskId);
+  //   await _localStorage.put('tasks', localTasks);
+
+  //   // Try to sync with Firebase
+  //   try {
+  //     await _firestore
+  //         .collection('users')
+  //         .doc(currentUser!.uid)
+  //         .collection('tasks')
+  //         .doc(taskId)
+  //         .delete();
+  //   } catch (e) {
+  //     debugPrint('Failed to delete task: $e');
+  //   }
+  // }
+
   Future<void> deleteTask(String taskId) async {
     if (isGuest) return;
-
-    // Remove from local storage first
     final localTasks = List<Map<String, dynamic>>.from(
         _localStorage.get('tasks', defaultValue: []));
-    localTasks.removeWhere((t) => t['id'] == taskId);
-    await _localStorage.put('tasks', localTasks);
+    final index = localTasks.indexWhere((t) => t['id'] == taskId);
 
-    // Try to sync with Firebase
+    if (index != -1) {
+      localTasks[index]['deleted'] = true;
+      await _localStorage.put('tasks', localTasks);
+    }
+
     try {
       await _firestore
           .collection('users')
           .doc(currentUser!.uid)
           .collection('tasks')
           .doc(taskId)
-          .delete();
+          .update({'deleted': true});
     } catch (e) {
-      debugPrint('Failed to delete task: $e');
+      debugPrint('Failed to mark task as deleted: $e');
     }
   }
+
 
   Future<void> updateUserPreferences({
     String? theme,

@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "about": "About",
+    "history": "Saved Entries",
     "settings": "Settings",
     "profile": "Profile"
   },
@@ -95,5 +96,13 @@
   "syncing": "Syncing...",
   "sync_complete": "Sync complete",
   "sync_failed": "Sync failed",
-  "persistent_login": "Stay logged in"
+  "persistent_login": "Stay logged in",
+  "history": {
+    "title": "Saved Entries",
+    "empty": "No saved entries found"
+  },
+  "clear_history_title": "Clear History?",
+  "clear_history_message": "All completed and deleted tasks will be permanently removed. Continue?",
+  "clear_history_cancel": "Cancel",
+  "clear_history_confirm": "Clear"
 }

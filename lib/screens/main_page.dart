@@ -58,6 +58,8 @@ class _MainPageState extends State<MainPage> {
                           return const Center(child: CircularProgressIndicator());
                         }
                         final tasks = (snapshot.data ?? [])
+                          .where((t) => t['deleted'] != true)
+                          .toList()
                           ..sort((a, b) {
                             final aDone = a['isDone'] ?? false;
                             final bDone = b['isDone'] ?? false;

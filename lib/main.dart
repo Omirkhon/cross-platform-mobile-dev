@@ -13,7 +13,8 @@ import 'screens/profile_page.dart';
 import 'screens/guest_home_page.dart';
 import 'screens/connectivity_service.dart';
 import 'screens/auth_service.dart';
-import 'screens/sync_banner.dart'; // Add this import
+import 'screens/sync_banner.dart';
+import 'screens/history_page.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -107,6 +108,7 @@ class MyApp extends StatelessWidget {
             '/home': (context) => const MyHomePage(),
             '/guest': (context) => const GuestHomePage(),
             '/about': (context) => const AboutPage2(),
+            '/history': (context) => const HistoryPage(),
             '/settings': (context) => const SettingsPage(),
             '/profile': (context) => ProfilePage(auth: Provider.of<AuthService>(context)),
           },
@@ -143,6 +145,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       if (!isGuest) ...[
         BottomNavigationBarItem(
+          icon: const Icon(Icons.history),
+          label: 'nav.history'.tr(),
+        ),
+        BottomNavigationBarItem(
           icon: const Icon(Icons.settings),
           label: 'nav.settings'.tr(),
         ),
@@ -152,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
-          if (!isGuest) const SyncBanner(), // Add SyncBanner here
+          if (!isGuest) const SyncBanner(), 
           if (isOffline)
             Container(
               width: double.infinity,
@@ -173,10 +179,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 const MainPage(),
                 const AboutPage2(),
-                if (!isGuest)
-                  const SettingsPage()
-                else
-                  Container(),
+                if (!isGuest) const HistoryPage() else Container(),
+                if (!isGuest) const SettingsPage() else Container(),
               ],
             ),
           ),
