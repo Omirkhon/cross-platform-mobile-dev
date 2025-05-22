@@ -104,5 +104,10 @@
   "clear_history_title": "Clear History?",
   "clear_history_message": "All completed and deleted tasks will be permanently removed. Continue?",
   "clear_history_cancel": "Cancel",
-  "clear_history_confirm": "Clear"
+  "clear_history_confirm": "Clear",
+  "search": "Search...",
+  "filterCategory": "Category",
+  "allCategories": "All",
+  "filterDate": "Choose date",
+  "clearFilters": "Clear filters"
 }

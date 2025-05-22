@@ -13,6 +13,10 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  String searchQuery = '';
+  String? selectedCategory;
+  DateTime? selectedDate;
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
@@ -20,15 +24,15 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       floatingActionButton: auth.isGuest
           ? FloatingActionButton(
-        onPressed: () => _showGuestRestriction(context),
-        backgroundColor: Colors.orange,
-        child: const Icon(Icons.warning, color: Colors.white),
-      )
+              onPressed: () => _showGuestRestriction(context),
+              backgroundColor: Colors.orange,
+              child: const Icon(Icons.warning, color: Colors.white),
+            )
           : FloatingActionButton(
-        onPressed: () => _navigateToCreateTask(context),
-        backgroundColor: Colors.deepPurple,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+              onPressed: () => _navigateToCreateTask(context),
+              backgroundColor: Colors.deepPurple,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
       body: Column(
         children: [
           if (auth.shouldShowSyncButton) const SyncBanner(),
@@ -49,7 +53,90 @@ class _MainPageState extends State<MainPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        TextField(
+                          onChanged: (value) {
+                            setState(() {
+                              searchQuery = value.toLowerCase();
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'search'.tr(),
+                            prefixIcon: const Icon(Icons.search),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: selectedCategory,
+                                hint: Text('filterCategory'.tr()),
+                                items: [
+                                  null,
+                                  "Work",
+                                  "Personal",
+                                  "Shopping",
+                                  "Health",
+                                  "Learning",
+                                  "Social",
+                                  "Hobby",
+                                  "Goals",
+                                ]
+                                    .map(
+                                      (cat) => DropdownMenuItem<String>(
+                                        value: cat,
+                                        child: Text(cat ?? 'allCategories'.tr()),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCategory = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                final pickedDate = await showDatePicker(
+                                  context: context,
+                                  initialDate: DateTime.now(),
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (pickedDate != null) {
+                                  setState(() {
+                                    selectedDate = pickedDate;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.calendar_today),
+                              label: Text(selectedDate == null
+                                  ? 'filterDate'.tr()
+                                  : DateFormat.yMMMd().format(selectedDate!)),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              tooltip: 'clearFilters'.tr(),
+                              onPressed: () {
+                                setState(() {
+                                  searchQuery = '';
+                                  selectedCategory = null;
+                                  selectedDate = null;
+                                });
+                              },
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                   Expanded(
                     child: StreamBuilder<List<Map<String, dynamic>>>(
                       stream: auth.tasksStream,
@@ -57,14 +144,35 @@ class _MainPageState extends State<MainPage> {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
                         }
-                        final tasks = (snapshot.data ?? [])
-                          .where((t) => t['deleted'] != true)
-                          .toList()
-                          ..sort((a, b) {
-                            final aDone = a['isDone'] ?? false;
-                            final bDone = b['isDone'] ?? false;
-                            return aDone == bDone ? 0 : (aDone ? 1 : -1);
-                          });
+
+                        var tasks = (snapshot.data ?? [])
+                            .where((t) => t['deleted'] != true)
+                            .toList();
+
+                        // Фильтрация
+                        tasks = tasks.where((task) {
+                          final text = (task['text'] ?? '').toLowerCase();
+                          final matchText = searchQuery.isEmpty || text.contains(searchQuery);
+                          final matchCategory = selectedCategory == null ||
+                              task['category'] == selectedCategory;
+                          final taskTime = task['time'] != null
+                              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
+                              : null;
+                          final matchDate = selectedDate == null ||
+                              (taskTime != null &&
+                                  taskTime.year == selectedDate!.year &&
+                                  taskTime.month == selectedDate!.month &&
+                                  taskTime.day == selectedDate!.day);
+                          return matchText && matchCategory && matchDate;
+                        }).toList();
+
+                        // Сортировка: незавершённые вверху
+                        tasks.sort((a, b) {
+                          final aDone = a['isDone'] ?? false;
+                          final bDone = b['isDone'] ?? false;
+                          return aDone == bDone ? 0 : (aDone ? 1 : -1);
+                        });
+
                         if (tasks.isEmpty) {
                           return Center(
                             child: Column(
@@ -80,6 +188,7 @@ class _MainPageState extends State<MainPage> {
                             ),
                           );
                         }
+
                         return ListView.builder(
                           padding: const EdgeInsets.all(16),
                           itemCount: tasks.length,
@@ -134,7 +243,7 @@ class _MainPageState extends State<MainPage> {
             action: SnackBarAction(
               label: 'undo'.tr(),
               onPressed: () {
-                // Note: Undo functionality would need to be implemented
+                // Реализовать Undo при необходимости
               },
             ),
           ),
@@ -152,14 +261,12 @@ class _MainPageState extends State<MainPage> {
     final baseStyle = theme.textTheme.bodyLarge!;
     final textStyle = isDone
         ? baseStyle.copyWith(
-      decoration: TextDecoration.lineThrough,
-      color: baseStyle.color!.withOpacity(0.5),
-    )
+            decoration: TextDecoration.lineThrough,
+            color: baseStyle.color!.withOpacity(0.5),
+          )
         : baseStyle;
 
-    final cardColor = isDone
-        ? theme.colorScheme.surfaceVariant
-        : theme.cardColor;
+    final cardColor = isDone ? theme.colorScheme.surfaceVariant : theme.cardColor;
     final elevation = isDone ? 0.0 : 2.0;
 
     return Card(
@@ -178,9 +285,7 @@ class _MainPageState extends State<MainPage> {
           children: [
             Text(
               task['text'],
-              style: theme.textTheme.bodyLarge!.copyWith(
-                decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
-              ),
+              style: textStyle,
             ),
             if (task['category'] != null) ...[
               const SizedBox(height: 4),
@@ -195,9 +300,9 @@ class _MainPageState extends State<MainPage> {
         ),
         trailing: time != null
             ? Text(
-          '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-          style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
-        )
+                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
+              )
             : null,
         onTap: () => _editTask(context, task, auth),
       ),
@@ -212,12 +317,11 @@ class _MainPageState extends State<MainPage> {
           const Icon(Icons.warning, size: 64, color: Colors.orange),
           const SizedBox(height: 20),
           Text('guest_restriction'.tr(),
-              style: const TextStyle(fontSize: 18),
-              textAlign: TextAlign.center),
+              style: const TextStyle(fontSize: 18), textAlign: TextAlign.center),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                context, '/auth', (route) => false),
+            onPressed: () =>
+                Navigator.pushNamedAndRemoveUntil(context, '/auth', (route) => false),
             child: Text('login.button'.tr()),
           ),
         ],

@@ -104,5 +104,10 @@
   "clear_history_title": "Сақталған жазбаларды тазарту?",
   "clear_history_message": "Барлық аяқталған және жойылған тапсырмалар біржола жойылады. Жалғастыруды қалайсыз ба?",
   "clear_history_cancel": "Бас тарту",
-  "clear_history_confirm": "Тазарту"
+  "clear_history_confirm": "Тазарту",
+  "search": "Іздеу...",
+  "filterCategory": "Санат",
+  "allCategories": "Барлығы",
+  "filterDate": "Күнді таңдаңыз",
+  "clearFilters": "Сүзгілерді тазарту"
 }

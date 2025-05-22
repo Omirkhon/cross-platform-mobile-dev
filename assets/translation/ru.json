@@ -104,5 +104,10 @@
   "clear_history_title": "Очистить историю?",
   "clear_history_message": "Все завершённые и удалённые задачи будут безвозвратно удалены. Продолжить?",
   "clear_history_cancel": "Отмена",
-  "clear_history_confirm": "Очистить"
+  "clear_history_confirm": "Очистить",
+  "search": "Поиск...",
+  "filterCategory": "Категория",
+  "allCategories": "Все",
+  "filterDate": "Выбрать дату",
+  "clearFilters": "Сбросить фильтры"
 }
