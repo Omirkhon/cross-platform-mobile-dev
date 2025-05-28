@@ -22,7 +22,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Initialize Hive for local storage
+    
     await Hive.initFlutter();
     await Hive.openBox('localStorage');
     await Hive.openBox('preferences');
@@ -73,6 +73,9 @@ class MyApp extends StatelessWidget {
       builder: (context, themeMode, _) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          locale: context.locale,
+          supportedLocales: context.supportedLocales,
+          localizationsDelegates: context.localizationDelegates,
           title: 'To-Do List',
           theme: ThemeData(
             brightness: Brightness.light,
@@ -99,9 +102,6 @@ class MyApp extends StatelessWidget {
             ),
           ),
           themeMode: themeMode,
-          locale: context.locale,
-          supportedLocales: context.supportedLocales,
-          localizationsDelegates: context.localizationDelegates,
           initialRoute: '/auth',
           routes: {
             '/auth': (context) => const AuthPage(),
@@ -133,6 +133,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final auth = Provider.of<AuthService>(context);
     final isGuest = auth.isGuest;
     final isOffline = context.watch<ConnectivityService>().isOffline;
+    final localeKey = context.locale.toString();
+    
 
     final navItems = [
       BottomNavigationBarItem(
@@ -155,51 +157,54 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     ];
 
-    return Scaffold(
-      body: Column(
-        children: [
-          if (!isGuest) const SyncBanner(), 
-          if (isOffline)
-            Container(
-              width: double.infinity,
-              color: Colors.red,
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                'offline_mode'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+    return KeyedSubtree(
+      key: ValueKey(localeKey),
+      child: Scaffold(
+        body: Column(
+          children: [
+            if (!isGuest) const SyncBanner(), 
+            if (isOffline)
+              Container(
+                width: double.infinity,
+                color: Colors.red,
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'offline_mode'.tr(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
+              ),
+            Expanded(
+              child: IndexedStack(
+                index: _currentIndex,
+                children: [
+                  const MainPage(),
+                  const AboutPage2(),
+                  if (!isGuest) const HistoryPage() else Container(),
+                  if (!isGuest) const SettingsPage() else Container(),
+                ],
               ),
             ),
-          Expanded(
-            child: IndexedStack(
-              index: _currentIndex,
-              children: [
-                const MainPage(),
-                const AboutPage2(),
-                if (!isGuest) const HistoryPage() else Container(),
-                if (!isGuest) const SettingsPage() else Container(),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex.clamp(0, navItems.length - 1),
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        items: navItems,
-        onTap: (index) {
-          if (isGuest && index >= 2) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('guest_restriction'.tr())),
-            );
-            return;
-          }
-          setState(() => _currentIndex = index);
-        },
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex.clamp(0, navItems.length - 1),
+          selectedItemColor: Colors.deepPurple,
+          unselectedItemColor: Colors.grey,
+          items: navItems,
+          onTap: (index) {
+            if (isGuest && index >= 2) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('guest_restriction'.tr())),
+              );
+              return;
+            }
+            setState(() => _currentIndex = index);
+          },
+        ),
       ),
     );
   }

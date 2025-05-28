@@ -36,6 +36,7 @@ class GuestHomePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
+              ScaffoldMessenger.of(context).clearSnackBars();
               Navigator.pushNamedAndRemoveUntil(
                   context, '/auth', (route) => false);
             },
@@ -58,10 +59,6 @@ class GuestHomePage extends StatelessWidget {
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: auth.tasksStream,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
                 final tasks = snapshot.data ?? [];
 
                 if (tasks.isEmpty) {

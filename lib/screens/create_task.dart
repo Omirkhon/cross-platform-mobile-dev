@@ -5,12 +5,14 @@ class CreateTaskPage extends StatefulWidget {
   final String? initialText;
   final DateTime? initialTime;
   final String? initialCategory;
+  final String? initialId;
 
   const CreateTaskPage({
     super.key,
     this.initialText,
     this.initialTime,
     this.initialCategory,
+    this.initialId,
   });
 
   @override
@@ -63,7 +65,9 @@ class _CreateTaskPageState extends State<CreateTaskPage> {
           _selectedTime!.minute,
         ).millisecondsSinceEpoch;
       }
-
+      if (widget.initialId != null) {
+        taskData['id'] = widget.initialId;
+      }
       Navigator.pop(context, taskData);
     }
   }

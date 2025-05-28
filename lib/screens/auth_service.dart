@@ -110,7 +110,7 @@ class AuthService with ChangeNotifier {
   Future<void> addTask(Map<String, dynamic> task) async {
     final newTask = {
       ...task,
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'id': task['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'createdAt': DateTime.now().millisecondsSinceEpoch,
     };
 
@@ -119,7 +119,6 @@ class AuthService with ChangeNotifier {
       _guestTasksController.add(List.from(_guestTasks));
       return;
     }
-
     
     final localTasks = List<Map<String, dynamic>>.from(
         _localStorage.get('tasks', defaultValue: []));
@@ -230,7 +229,6 @@ class AuthService with ChangeNotifier {
       await _localStorage.put('tasks', localTasks);
     }
 
-    
     try {
       await _firestore
           .collection('users')
@@ -243,11 +241,16 @@ class AuthService with ChangeNotifier {
     }
   }
 
-
   Future<void> deleteTask(String taskId) async {
-    if (isGuest) return;
+    if (isGuest) {
+      _guestTasks.removeWhere((t) => t['id'] == taskId);
+      _guestTasksController.add(List.from(_guestTasks));
+      return;
+    }
+
     final localTasks = List<Map<String, dynamic>>.from(
-        _localStorage.get('tasks', defaultValue: []));
+      _localStorage.get('tasks', defaultValue: [])
+    );
     final index = localTasks.indexWhere((t) => t['id'] == taskId);
 
     if (index != -1) {
@@ -257,27 +260,23 @@ class AuthService with ChangeNotifier {
 
     try {
       await _firestore
-          .collection('users')
-          .doc(currentUser!.uid)
-          .collection('tasks')
-          .doc(taskId)
-          .update({'deleted': true});
+        .collection('users')
+        .doc(currentUser!.uid)
+        .collection('tasks')
+        .doc(taskId)
+        .update({'deleted': true});
     } catch (e) {
       debugPrint('Failed to mark task as deleted: $e');
     }
   }
-
 
   Future<void> updateUserPreferences({
     String? theme,
     String? language,
   }) async {
     if (isGuest) return;
-
-   
     if (theme != null) await _prefsBox.put('theme', theme);
     if (language != null) await _prefsBox.put('language', language);
-
     
     try {
       await _firestore
@@ -300,7 +299,6 @@ class AuthService with ChangeNotifier {
       'theme': _prefsBox.get('theme', defaultValue: 'system'),
       'language': _prefsBox.get('language', defaultValue: 'en'),
     };
-
    
     try {
       DocumentSnapshot snapshot = await _firestore
@@ -309,7 +307,6 @@ class AuthService with ChangeNotifier {
           .get();
 
       final firebasePrefs = snapshot.data() as Map<String, dynamic>? ?? {};
-
       
       return {...localPrefs, ...firebasePrefs};
     } catch (e) {

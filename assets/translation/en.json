@@ -13,7 +13,6 @@
   "slogan": "JUST DO IT!",
   "description": "The main goal of JUST DO IT! is to help users organize tasks efficiently. The app allows adding, removing, editing, and tracking daily activities, ensuring productivity and time management.",
   "credits": "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan within the course 'Crossplatform Development' at Astana IT University.\nMentor: Assistant Professor Abzal Kyzyrkanov",
-  
   "task_manager": "Task Manager",
   "enter_task": "Enter the task...",
   "pick_time": "Pick time",
@@ -97,10 +96,16 @@
   "sync_complete": "Sync complete",
   "sync_failed": "Sync failed",
   "persistent_login": "Stay logged in",
+  
   "history": {
     "title": "Saved Entries",
-    "empty": "No saved entries found"
+    "empty": "No tasks in history",
+    "category": "Category: {}",
+    "time": "Time: {}",
+    "createdAt": "Created at: {}",
+    "deleted": "Deleted"
   },
+
   "clear_history_title": "Clear History?",
   "clear_history_message": "All completed and deleted tasks will be permanently removed. Continue?",
   "clear_history_cancel": "Cancel",

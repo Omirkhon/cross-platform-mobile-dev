@@ -1,57 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
-class AboutPage2 extends StatelessWidget {
+class AboutPage2 extends StatefulWidget {
   const AboutPage2({super.key});
 
   @override
+  State<AboutPage2> createState() => _AboutPage2State();
+}
+
+class _AboutPage2State extends State<AboutPage2> {
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: OrientationBuilder(
-        builder: (context, orientation) {
-          final isPortrait = orientation == Orientation.portrait;
-          final size = MediaQuery.of(context).size;
-          final isWide = size.width > 600;
+    return KeyedSubtree(
+      key: ValueKey(context.locale.toString()),
+      child: Scaffold(
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            final isPortrait = orientation == Orientation.portrait;
+            final size = MediaQuery.of(context).size;
+            final isWide = size.width > 600;
 
-          final logo = Image.asset(
-            'assets/logo.png',
-            width: isWide ? 250 : 200,
-          );
+            final logo = Image.asset(
+              'assets/logo.png',
+              width: isWide ? 250 : 200,
+            );
 
-          final textContent = Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                "slogan".tr(),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isWide ? 36 : 32,
-                  fontWeight: FontWeight.bold,
+            final textContent = Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "slogan".tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: isWide ? 36 : 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                "description".tr(),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: isWide ? 20 : 18 , height: 1.4,), 
-              ),
-              const SizedBox(height: 24),
-              Text(
-                "credits".tr(),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12 , height: 1.5,),
-              ),
-            ],
-          );
+                const SizedBox(height: 24),
+                Text(
+                  "description".tr(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: isWide ? 20 : 18, height: 1.4),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "credits".tr(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, height: 1.5),
+                ),
+              ],
+            );
 
-          return Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 30),
-                child:
-                    isPortrait
-                        ? Column(
+            return Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: isPortrait
+                      ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -60,7 +66,7 @@ class AboutPage2 extends StatelessWidget {
                             textContent,
                           ],
                         )
-                        : Row(
+                      : Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(child: Center(child: logo)),
@@ -68,10 +74,11 @@ class AboutPage2 extends StatelessWidget {
                             Expanded(child: textContent),
                           ],
                         ),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

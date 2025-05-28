@@ -186,12 +186,16 @@ class _AuthPageState extends State<AuthPage> {
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(     
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : Text(
                           _isLogin ? 'login.button'.tr() : 'register.button'.tr(),
-                          style: const TextStyle(fontSize: 18),
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
                     ),
@@ -214,8 +218,15 @@ class _AuthPageState extends State<AuthPage> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         side: const BorderSide(color: Colors.deepPurple),
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,        
+                        shape: RoundedRectangleBorder(        
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text('guest.button'.tr()),
+                      child: Text(
+                        'guest.button'.tr(), 
+                        style: const TextStyle(fontSize: 18, color: Colors.deepPurple)),
                     ),
                   ],
                 ),

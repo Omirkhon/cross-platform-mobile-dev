@@ -65,9 +65,13 @@ class ProfilePage extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: Text('logout.button'.tr()),
+              child: Text(
+                'logout.button'.tr(),
+                style: const TextStyle(fontSize: 16),
+                ),
             ),
           ),
         ],

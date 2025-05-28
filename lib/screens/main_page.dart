@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
 import 'sync_banner.dart';
@@ -19,190 +20,201 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    return KeyedSubtree(
+      key: ValueKey(context.locale.toString()),
+      child: Scaffold(
+        floatingActionButton: _buildFAB(context),
+        body: SafeArea(
+          child: Column(
+            children: [
+              if (Provider.of<AuthService>(context).shouldShowSyncButton) const SyncBanner(),
+              Expanded(
+                child: _buildContent(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFAB(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
+    return auth.isGuest
+        ? FloatingActionButton(
+            onPressed: () => _showGuestRestriction(context),
+            backgroundColor: Colors.orange,
+            child: const Icon(Icons.warning, color: Colors.white),
+          )
+        : FloatingActionButton(
+            onPressed: () => _navigateToCreateTask(context),
+            backgroundColor: Colors.deepPurple,
+            child: const Icon(Icons.add, color: Colors.white),
+          );
+  }
 
-    return Scaffold(
-      floatingActionButton: auth.isGuest
-          ? FloatingActionButton(
-              onPressed: () => _showGuestRestriction(context),
-              backgroundColor: Colors.orange,
-              child: const Icon(Icons.warning, color: Colors.white),
-            )
-          : FloatingActionButton(
-              onPressed: () => _navigateToCreateTask(context),
-              backgroundColor: Colors.deepPurple,
-              child: const Icon(Icons.add, color: Colors.white),
+  Widget _buildContent(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    if (auth.isGuest) {
+      return _buildGuestRestriction(context);
+    }
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        Center(
+          child: Text(
+            'title'.tr(),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
             ),
-      body: Column(
-        children: [
-          if (auth.shouldShowSyncButton) const SyncBanner(),
-          if (auth.isGuest)
-            _buildGuestRestriction(context)
-          else
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: _buildFilters(context),
+        ),
+        Expanded(
+          child: _buildTaskList(context, auth),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilters(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value.toLowerCase();
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'search'.tr(),
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
             Expanded(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      'title'.tr(),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
-                      ),
-                    ),
+              child: DropdownButtonFormField<String>(
+                value: selectedCategory,
+                hint: Text('filterCategory'.tr()),
+                items: [
+                  null,
+                  "Work",
+                  "Personal",
+                  "Shopping",
+                  "Health",
+                  "Learning",
+                  "Social",
+                  "Hobby",
+                  "Goals",
+                ].map(
+                  (cat) => DropdownMenuItem<String>(
+                    value: cat,
+                    child: Text(cat ?? 'allCategories'.tr()),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          onChanged: (value) {
-                            setState(() {
-                              searchQuery = value.toLowerCase();
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'search'.tr(),
-                            prefixIcon: const Icon(Icons.search),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: selectedCategory,
-                                hint: Text('filterCategory'.tr()),
-                                items: [
-                                  null,
-                                  "Work",
-                                  "Personal",
-                                  "Shopping",
-                                  "Health",
-                                  "Learning",
-                                  "Social",
-                                  "Hobby",
-                                  "Goals",
-                                ]
-                                    .map(
-                                      (cat) => DropdownMenuItem<String>(
-                                        value: cat,
-                                        child: Text(cat ?? 'allCategories'.tr()),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedCategory = value;
-                                  });
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (pickedDate != null) {
-                                  setState(() {
-                                    selectedDate = pickedDate;
-                                  });
-                                }
-                              },
-                              icon: const Icon(Icons.calendar_today),
-                              label: Text(selectedDate == null
-                                  ? 'filterDate'.tr()
-                                  : DateFormat.yMMMd().format(selectedDate!)),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.clear),
-                              tooltip: 'clearFilters'.tr(),
-                              onPressed: () {
-                                setState(() {
-                                  searchQuery = '';
-                                  selectedCategory = null;
-                                  selectedDate = null;
-                                });
-                              },
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: StreamBuilder<List<Map<String, dynamic>>>(
-                      stream: auth.tasksStream,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-
-                        var tasks = (snapshot.data ?? [])
-                            .where((t) => t['deleted'] != true)
-                            .toList();
-
-                        
-                        tasks = tasks.where((task) {
-                          final text = (task['text'] ?? '').toLowerCase();
-                          final matchText = searchQuery.isEmpty || text.contains(searchQuery);
-                          final matchCategory = selectedCategory == null ||
-                              task['category'] == selectedCategory;
-                          final taskTime = task['time'] != null
-                              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
-                              : null;
-                          final matchDate = selectedDate == null ||
-                              (taskTime != null &&
-                                  taskTime.year == selectedDate!.year &&
-                                  taskTime.month == selectedDate!.month &&
-                                  taskTime.day == selectedDate!.day);
-                          return matchText && matchCategory && matchDate;
-                        }).toList();
-
-                        
-                        tasks.sort((a, b) {
-                          final aDone = a['isDone'] ?? false;
-                          final bDone = b['isDone'] ?? false;
-                          return aDone == bDone ? 0 : (aDone ? 1 : -1);
-                        });
-
-                        if (tasks.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'noTasks'.tr(),
-                                  style: Theme.of(context).textTheme.bodyLarge,
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: tasks.length,
-                          itemBuilder: (context, index) =>
-                              _buildSwipeableTaskItem(context, tasks[index], auth),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ).toList(),
+                onChanged: (value) => setState(() => selectedCategory = value),
               ),
             ),
-        ],
-      ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  locale: context.locale,
+                );
+                if (pickedDate != null) {
+                  setState(() => selectedDate = pickedDate);
+                }
+              },
+              icon: const Icon(Icons.calendar_today),
+              label: Text(
+                selectedDate == null
+                    ? 'filterDate'.tr()
+                    : DateFormat.yMMMd(context.locale.toString()).format(selectedDate!),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.clear),
+              tooltip: 'clearFilters'.tr(),
+              onPressed: () {
+                setState(() {
+                  searchQuery = '';
+                  selectedCategory = null;
+                  selectedDate = null;
+                });
+              },
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskList(BuildContext context, AuthService auth) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: auth.tasksStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var tasks = (snapshot.data ?? [])
+            .where((t) => t['deleted'] != true)
+            .toList();
+
+        tasks = tasks.where((task) {
+          final text = (task['text'] ?? '').toLowerCase();
+          final matchText = searchQuery.isEmpty || text.contains(searchQuery);
+          final matchCategory = selectedCategory == null || task['category'] == selectedCategory;
+          final taskTime = task['time'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
+              : null;
+          final matchDate = selectedDate == null || (taskTime != null &&
+              taskTime.year == selectedDate!.year &&
+              taskTime.month == selectedDate!.month &&
+              taskTime.day == selectedDate!.day);
+          return matchText && matchCategory && matchDate;
+        }).toList();
+
+        tasks.sort((a, b) {
+          final aDone = a['isDone'] ?? false;
+          final bDone = b['isDone'] ?? false;
+          return aDone == bDone ? 0 : (aDone ? 1 : -1);
+        });
+
+        if (tasks.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                const SizedBox(height: 16),
+                Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
+              ],
+            ),
+          );
+        }
+
+        final brightness = Theme.of(context).brightness;
+        return ListView.builder(
+          key: ValueKey('$brightness-${context.locale.toString()}'),
+          padding: const EdgeInsets.all(16),
+          itemCount: tasks.length,
+          itemBuilder: (context, index) =>
+              _buildSwipeableTaskItem(context, tasks[index], auth),
+        );
+      },
     );
   }
 
@@ -236,14 +248,15 @@ class _MainPageState extends State<MainPage> {
         );
       },
       onDismissed: (direction) {
+        final deletedTask = Map<String, dynamic>.from(task);
         auth.deleteTask(task['id']);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('taskDeleted'.tr()),
             action: SnackBarAction(
               label: 'undo'.tr(),
-              onPressed: () {
-                // Реализовать Undo при необходимости
+              onPressed: () async {
+                await auth.addTask(deletedTask);
               },
             ),
           ),
@@ -374,6 +387,7 @@ class _MainPageState extends State<MainPage> {
               ? DateTime.fromMillisecondsSinceEpoch(task['time'])
               : null,
           initialCategory: task['category'],
+          initialId: task['id'],
         ),
       ),
     );

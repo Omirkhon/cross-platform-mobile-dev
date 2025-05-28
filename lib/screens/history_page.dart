@@ -20,36 +20,39 @@ class HistoryPage extends StatelessWidget {
     final auth = Provider.of<AuthService>(context);
     final isOffline = context.watch<ConnectivityService>().isOffline;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('nav.history'.tr()),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_forever),
-            tooltip: 'Clear Deleted Tasks',
-            onPressed: () => _confirmClearHistory(context),
-          ),
-        ],
-      ),
-      body: isOffline
-          ? _buildOfflineList()
-          : StreamBuilder<List<Map<String, dynamic>>>(
-              stream: auth.tasksStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final tasks = (snapshot.data ?? [])
-                  ..sort((a, b) => parseDate(b['createdAt']).compareTo(parseDate(a['createdAt'])));
-
-                return _buildTaskList(context, tasks);
-              },
+    return KeyedSubtree(
+      key: ValueKey(context.locale.toString()),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('nav.history'.tr()),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_forever),
+              tooltip: 'clear_history'.tr(),
+              onPressed: () => _confirmClearHistory(context),
             ),
-    );
+          ],
+        ),
+        body: isOffline
+            ? _buildOfflineList(context)
+            : StreamBuilder<List<Map<String, dynamic>>>(
+                stream: auth.tasksStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final tasks = (snapshot.data ?? [])
+                    ..sort((a, b) => parseDate(b['createdAt']).compareTo(parseDate(a['createdAt'])));
+
+                  return _buildTaskList(context, tasks);
+                },
+              ),
+        ),
+      );
   }
 
-  Widget _buildOfflineList() {
+  Widget _buildOfflineList(BuildContext context) {
     final box = Hive.box('localStorage');
     final localTasks = List<Map<String, dynamic>>.from(box.get('tasks', defaultValue: []));
 
@@ -68,6 +71,7 @@ class HistoryPage extends StatelessWidget {
     }
 
     return ListView.builder(
+      key: ValueKey(context!.locale.toString()),
       padding: const EdgeInsets.all(16),
       itemCount: tasks.length,
       itemBuilder: (context, index) {
@@ -97,15 +101,19 @@ class HistoryPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (task['category'] != null)
-                  Text('Category: ${task['category']}'),
+                  Text('history.category'.tr(args: [task['category']])),
                 if (time != null)
-                  Text('Time: ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
-                Text('Created at: ${DateFormat('yyyy-MM-dd HH:mm').format(createdAt)}'),
+                  Text('history.time'.tr(args: [DateFormat.Hm(context.locale.toString()).format(time)])),
+                  Text('history.createdAt'.tr(args: [
+                    DateFormat.yMMMd(context!.locale.toString())
+                        .add_Hm()
+                        .format(createdAt)
+                  ])),
                 if (isDeleted)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(top: 4),
                     child: Text(
-                      'Deleted',
+                      'history.deleted'.tr(),
                       style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
                     ),
                   ),
