@@ -15,6 +15,7 @@ import 'screens/connectivity_service.dart';
 import 'screens/auth_service.dart';
 import 'screens/sync_banner.dart';
 import 'screens/history_page.dart';
+import 'screens/notification_service.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -41,7 +42,7 @@ void main() async {
     } else {
       await Firebase.initializeApp();
     }
-
+    await NotificationService.init();
     await EasyLocalization.ensureInitialized();
 
     runApp(

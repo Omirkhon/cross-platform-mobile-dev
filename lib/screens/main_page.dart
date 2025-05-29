@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'auth_service.dart';
 import 'create_task.dart';
 import 'sync_banner.dart';
+import 'notification_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -374,8 +375,21 @@ class _MainPageState extends State<MainPage> {
     if (newTask != null && newTask is Map<String, dynamic>) {
       final auth = Provider.of<AuthService>(context, listen: false);
       await auth.addTask(newTask);
+
+      if (newTask['time'] != null) {
+        final DateTime taskTime = DateTime.fromMillisecondsSinceEpoch(newTask['time']);
+        final int notificationId = newTask['text'].hashCode ^ taskTime.hashCode;
+
+        await NotificationService.scheduleNotification(
+          id: notificationId,
+          title: 'Reminder: ${newTask['text']}',
+          body: '⏰ 30 minutes left! Get ready for the task',
+          deadline: taskTime,
+        );
+      }
     }
   }
+
 
   void _editTask(BuildContext context, Map<String, dynamic> task, AuthService auth) async {
     final editedTask = await Navigator.push(

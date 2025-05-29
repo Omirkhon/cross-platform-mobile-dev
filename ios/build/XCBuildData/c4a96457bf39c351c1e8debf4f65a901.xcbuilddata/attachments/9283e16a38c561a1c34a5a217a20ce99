@@ -1,0 +1,15 @@
+{
+  "" : {
+    "const-values" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master.swiftconstvalues",
+    "dependencies" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master.d",
+    "diagnostics" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master.dia",
+    "emit-module-dependencies" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master-emit-module.d",
+    "emit-module-diagnostics" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master-emit-module.dia",
+    "swift-dependencies" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/ReachabilitySwift-master.swiftdeps"
+  },
+  "/Users/sailauayaulym/cross-platform-mobile-dev/ios/Pods/ReachabilitySwift/Sources/Reachability.swift" : {
+    "index-unit-output-path" : "/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/Reachability.o",
+    "llvm-bc" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/Reachability.bc",
+    "object" : "/Users/sailauayaulym/cross-platform-mobile-dev/ios/build/Pods.build/Release-iphoneos/ReachabilitySwift.build/Objects-normal/arm64/Reachability.o"
+  }
+}
