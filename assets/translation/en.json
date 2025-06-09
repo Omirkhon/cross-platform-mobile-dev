@@ -17,6 +17,7 @@
   "enter_task": "Enter the task...",
   "pick_time": "Pick time",
   "choose_category": "Choose category",
+  "clear_history": "Clear history",
   "save": "Save",
   "categories": {
     "work": "Work",

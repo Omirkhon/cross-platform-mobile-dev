@@ -96,6 +96,7 @@
   "sync_complete": "Синхрондау аяқталды",
   "sync_failed": "Синхрондау сәтсіз аяқталды",
   "persistent_login": "Жүйеде қалу",
+  "clear_history": "Clear history",
   
   "history": {
     "title": "Сақталғандар",

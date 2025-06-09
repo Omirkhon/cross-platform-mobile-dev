@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'screens/about_page2.dart';
 import 'screens/main_page.dart';
@@ -41,6 +42,10 @@ void main() async {
       );
     } else {
       await Firebase.initializeApp();
+      FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
     }
     await NotificationService.init();
     await EasyLocalization.ensureInitialized();

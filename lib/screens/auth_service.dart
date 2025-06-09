@@ -89,10 +89,12 @@ class AuthService with ChangeNotifier {
       return;
     }
 
-   
-    final cachedTasks = _localStorage.get('tasks', defaultValue: []);
-    if (cachedTasks is List && cachedTasks.isNotEmpty) {
-      yield cachedTasks.cast<Map<String, dynamic>>();
+    final raw = _localStorage.get('tasks', defaultValue: []);
+    if (raw is List && raw.isNotEmpty) {
+      final cachedTasks = raw
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      yield cachedTasks;
       await syncData();
     }
 
@@ -120,8 +122,10 @@ class AuthService with ChangeNotifier {
       return;
     }
     
-    final localTasks = List<Map<String, dynamic>>.from(
-        _localStorage.get('tasks', defaultValue: []));
+    final raw = _localStorage.get('tasks', defaultValue: []);
+  final localTasks = (raw as List<dynamic>)
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .toList();
     localTasks.add(newTask);
     await _localStorage.put('tasks', localTasks);
 

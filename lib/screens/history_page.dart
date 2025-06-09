@@ -43,18 +43,24 @@ class HistoryPage extends StatelessWidget {
                   }
 
                   final tasks = (snapshot.data ?? [])
-                    ..sort((a, b) => parseDate(b['createdAt']).compareTo(parseDate(a['createdAt'])));
+                    ..sort((a, b) => parseDate(
+                          b['createdAt'],
+                        ).compareTo(
+                          parseDate(a['createdAt']),
+                        ));
 
                   return _buildTaskList(context, tasks);
                 },
               ),
-        ),
-      );
+      ),
+    );
   }
 
   Widget _buildOfflineList(BuildContext context) {
     final box = Hive.box('localStorage');
-    final localTasks = List<Map<String, dynamic>>.from(box.get('tasks', defaultValue: []));
+    final localTasks = List<Map<String, dynamic>>.from(
+      box.get('tasks', defaultValue: []),
+    );
 
     localTasks.sort((a, b) {
       final aTime = a['createdAt'] ?? 0;
@@ -62,16 +68,17 @@ class HistoryPage extends StatelessWidget {
       return bTime.compareTo(aTime);
     });
 
-    return _buildTaskList(null, localTasks);
+    // Pass real context instead of null
+    return _buildTaskList(context, localTasks);
   }
 
-  Widget _buildTaskList(BuildContext? context, List<Map<String, dynamic>> tasks) {
+  Widget _buildTaskList(BuildContext context, List<Map<String, dynamic>> tasks) {
     if (tasks.isEmpty) {
       return Center(child: Text('history.empty'.tr()));
     }
 
     return ListView.builder(
-      key: ValueKey(context!.locale.toString()),
+      key: ValueKey(context.locale.toString()),
       padding: const EdgeInsets.all(16),
       itemCount: tasks.length,
       itemBuilder: (context, index) {
@@ -94,29 +101,40 @@ class HistoryPage extends StatelessWidget {
             title: Text(
               task['text'] ?? '',
               style: isDeleted
-                  ? const TextStyle(decoration: TextDecoration.lineThrough, color: Colors.redAccent)
+                  ? const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.redAccent,
+                    )
                   : null,
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (task['category'] != null)
+                if (task['category'] != null) ...[
                   Text('history.category'.tr(args: [task['category']])),
-                if (time != null)
-                  Text('history.time'.tr(args: [DateFormat.Hm(context.locale.toString()).format(time)])),
-                  Text('history.createdAt'.tr(args: [
-                    DateFormat.yMMMd(context!.locale.toString())
+                ],
+                if (time != null) ...[
+                  Text(
+                    'history.time'.tr(args: [
+                      DateFormat.Hm(context.locale.toString()).format(time)
+                    ]),
+                  ),
+                ],
+                Text(
+                  'history.createdAt'.tr(args: [
+                    DateFormat.yMMMd(context.locale.toString())
                         .add_Hm()
                         .format(createdAt)
-                  ])),
-                if (isDeleted)
-                  Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Text(
-                      'history.deleted'.tr(),
-                      style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
-                    ),
+                  ]),
+                ),
+                if (isDeleted) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'history.deleted'.tr(),
+                    style: const TextStyle(
+                        color: Colors.red, fontStyle: FontStyle.italic),
                   ),
+                ],
               ],
             ),
             trailing: Icon(
@@ -145,7 +163,7 @@ class HistoryPage extends StatelessWidget {
             child: Text('clear_history_confirm'.tr()),
           ),
         ],
-      ), 
+      ),
     );
 
     if (confirmed != true) return;
@@ -164,10 +182,11 @@ class HistoryPage extends StatelessWidget {
     }
 
     final box = Hive.box('localStorage');
-    final localTasks = List<Map<String, dynamic>>.from(box.get('tasks', defaultValue: []));
-    final cleaned = localTasks.where((t) =>
-        t['deleted'] != true && t['isDone'] != true).toList();
+    final localTasks = List<Map<String, dynamic>>.from(
+      box.get('tasks', defaultValue: []),
+    );
+    final cleaned = localTasks.where(
+        (t) => t['deleted'] != true && t['isDone'] != true).toList();
     await box.put('tasks', cleaned);
   }
-
 }
