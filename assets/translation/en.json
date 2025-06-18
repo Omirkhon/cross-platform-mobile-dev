@@ -2,21 +2,22 @@
   "nav": {
     "home": "Home",
     "about": "About",
-    "settings": "Settings"
+    "history": "Saved Entries",
+    "settings": "Settings",
+    "profile": "Profile"
   },
   "settings": {
     "language": "Language",
     "mode": "Dark mode"
   },
-
   "slogan": "JUST DO IT!",
   "description": "The main goal of JUST DO IT! is to help users organize tasks efficiently. The app allows adding, removing, editing, and tracking daily activities, ensuring productivity and time management.",
   "credits": "Developed by Issayeva Vera, Sailau Ayaulym, Turgimbayev Amirkhan within the course 'Crossplatform Development' at Astana IT University.\nMentor: Assistant Professor Abzal Kyzyrkanov",
-  
   "task_manager": "Task Manager",
   "enter_task": "Enter the task...",
   "pick_time": "Pick time",
   "choose_category": "Choose category",
+  "clear_history": "Clear history",
   "save": "Save",
   "categories": {
     "work": "Work",
@@ -29,5 +30,90 @@
     "goals": "Goals"
   },
   "title": "TO-DO LIST",
-  "noTasks": "There are no tasks."
+  "noTasks": "There are no tasks.",
+  
+  
+  "login": {
+    "title": "Sign In",
+    "button": "Sign In",
+    "switch": "Already have an account?"
+  },
+  "register": {
+    "title": "Sign Up",
+    "button": "Register",
+    "switch": "Create an account"
+  },
+  "guest": {
+    "button": "Continue as Guest",
+    "title": "Guest User",
+    "warning": "Guest mode has limited functionality. Please sign in to access all features."
+  },
+  "email": "Email",
+  "password": "Password",
+  "or": "OR",
+  "email_required": "Email is required",
+  "email_invalid": "Please enter a valid email",
+  "password_required": "Password is required",
+  "password_length": "Password must be at least 6 characters",
+  
+
+  "user_not_found": "User not found. Please register first.",
+  "wrong_password": "Wrong password. Please try again.",
+  "email_in_use": "Email already in use. Please use another email.",
+  "weak_password": "Password is too weak. Use at least 6 characters.",
+  "invalid_email": "Invalid email address.",
+  "auth_error": "Authentication error. Please try again.",
+  "error": "Error",
+  
+
+  "profile": {
+    "title": "Profile",
+    "email": "Email"
+  },
+  "logout": {
+    "button": "Log Out"
+  },
+  
+
+  "createTask": "Create Task",
+  "taskName": "Task name",
+  "selectCategory": "Select category",
+  "selectTime": "Select time",
+  "selectedTime": "Selected time: {time}",
+  "confirmDelete": "Delete this task?",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "taskDeleted": "Task deleted successfully",
+  
+ 
+  "guest_restriction": "Please sign in to access all features. Guest users have limited functionality.",
+  "ok": "OK",
+  "pleaseLogin": "Please log in to use this feature",
+
+  "offline_mode": "Working in offline mode",
+  "offline_mode_profile": "Profile data may be outdated in offline mode",
+  "sync_button": "Sync Data",
+  "syncing": "Syncing...",
+  "sync_complete": "Sync complete",
+  "sync_failed": "Sync failed",
+  "persistent_login": "Stay logged in",
+  
+  "history": {
+    "title": "Saved Entries",
+    "empty": "No tasks in history",
+    "category": "Category: {}",
+    "time": "Time: {}",
+    "createdAt": "Created at: {}",
+    "deleted": "Deleted"
+  },
+
+  "clear_history_title": "Clear History?",
+  "clear_history_message": "All completed and deleted tasks will be permanently removed. Continue?",
+  "clear_history_cancel": "Cancel",
+  "clear_history_confirm": "Clear",
+  "search": "Search...",
+  "filterCategory": "Category",
+  "allCategories": "All",
+  "filterDate": "Choose date",
+  "clearFilters": "Clear filters"
 }

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'create_task.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
+import 'auth_service.dart';
+import 'create_task.dart';
+import 'sync_banner.dart';
+import 'notification_service.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -10,295 +14,400 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class Task {
-  String text;
-  bool isDone;
-  DateTime? time;
-  String? category;
-
-  Task({
-    required this.text,
-    this.isDone = false,
-    this.time,
-    this.category,
-  });
-}
-
 class _MainPageState extends State<MainPage> {
-  final List<Task> _tasks = [];
-  late Timer _timer;
-
-  final Map<String, Color> _categoryColors = {
-    "Work": Colors.blue,
-    "Personal": Colors.orange,
-    "Shopping": Colors.green,
-    "Health": Colors.red,
-    "Learning": Colors.purple,
-    "Social": Colors.teal,
-    "Hobby": Colors.brown,
-    "Goals": Colors.pink,
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 30), _checkTasks);
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
-  }
-
-  void _checkTasks(Timer timer) {
-    setState(() {
-      for (var task in _tasks) {
-        if (task.time != null && task.time!.isBefore(DateTime.now())) {
-          task.isDone = true;
-        }
-      }
-    });
-  }
-
-  void _navigateToCreateTask() async {
-    final newTask = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const CreateTaskPage()),
-    );
-
-    if (newTask != null && newTask is Map) {
-      final taskText = newTask['task'] as String?;
-      final taskTime = newTask['time'] as DateTime?;
-      final taskCategory = newTask['category'] as String?;
-
-      if (taskText != null) {
-        setState(() {
-          _tasks.add(Task(
-            text: taskText,
-            time: taskTime,
-            category: taskCategory,
-          ));
-        });
-      }
-    }
-  }
-
-  void _editTask(int index) async {
-    final editedTask = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CreateTaskPage(
-          initialText: _tasks[index].text,
-          initialTime: _tasks[index].time,
-          initialCategory: _tasks[index].category,
-        ),
-      ),
-    );
-
-    if (editedTask != null && editedTask is Map) {
-      final taskText = editedTask['task'] as String?;
-      final taskTime = editedTask['time'] as DateTime?;
-      final taskCategory = editedTask['category'] as String?;
-
-      if (taskText != null) {
-        setState(() {
-          _tasks[index].text = taskText;
-          _tasks[index].time = taskTime;
-          _tasks[index].category = taskCategory;
-        });
-      }
-    }
-  }
-
-  void _deleteTask(int index) {
-    final deletedTask = _tasks[index];
-    setState(() {
-      _tasks.removeAt(index);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Task "${deletedTask.text}" deleted'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  String searchQuery = '';
+  String? selectedCategory;
+  DateTime? selectedDate;
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToCreateTask,
-        backgroundColor: Colors.deepPurple,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            Widget content;
-            if (constraints.maxWidth < 600) {
-              content = buildMainContent(size, orientation, fontSize: 18, theme: theme);
-            } else if (constraints.maxWidth < 1000) {
-              content = buildMainContent(size, orientation, fontSize: 22, theme: theme);
-            } else {
-              content = Center(
-                child: SizedBox(
-                  width: 700,
-                  child: buildMainContent(size, orientation, fontSize: 26, theme: theme),
-                ),
-              );
-            }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: content,
-            );
-          },
+    return KeyedSubtree(
+      key: ValueKey(context.locale.toString()),
+      child: Scaffold(
+        floatingActionButton: _buildFAB(context),
+        body: SafeArea(
+          child: Column(
+            children: [
+              if (Provider.of<AuthService>(context).shouldShowSyncButton) const SyncBanner(),
+              Expanded(
+                child: _buildContent(context),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget buildMainContent(Size size, Orientation orientation,
-      {required double fontSize, required ThemeData theme}) {
+  Widget _buildFAB(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    return auth.isGuest
+        ? FloatingActionButton(
+            onPressed: () => _showGuestRestriction(context),
+            backgroundColor: Colors.orange,
+            child: const Icon(Icons.warning, color: Colors.white),
+          )
+        : FloatingActionButton(
+            onPressed: () => _navigateToCreateTask(context),
+            backgroundColor: Colors.deepPurple,
+            child: const Icon(Icons.add, color: Colors.white),
+          );
+  }
+
+  Widget _buildContent(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    if (auth.isGuest) {
+      return _buildGuestRestriction(context);
+    }
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        const SizedBox(height: 20),
         Center(
           child: Text(
-            tr("title"),
-            style: TextStyle(
+            'title'.tr(),
+            style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: Colors.deepPurple,
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: _buildFilters(context),
+        ),
         Expanded(
-          child: _tasks.isEmpty
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
-                    const SizedBox(height: 12),
-                    Text(
-                      tr("noTasks"),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ],
-                )
-              : ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = _tasks[index];
-                    final taskTime = task.time;
-                    final isTimePassed = taskTime != null && taskTime.isBefore(DateTime.now());
-
-                    return Dismissible(
-                      key: Key(task.text + index.toString()),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        color: Colors.redAccent,
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      onDismissed: (_) => _deleteTask(index),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            task.isDone = !task.isDone;
-                          });
-                        },
-                        onLongPress: () => _editTask(index),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                task.isDone
-                                    ? Icons.check_circle
-                                    : Icons.radio_button_unchecked,
-                                color: task.isDone ? Colors.green : Colors.deepPurple,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      task.text,
-                                      style: TextStyle(
-                                        fontSize: fontSize - 2,
-                                        decoration: task.isDone
-                                            ? TextDecoration.lineThrough
-                                            : TextDecoration.none,
-                                        color: task.isDone
-                                            ? theme.disabledColor
-                                            : theme.textTheme.bodyLarge?.color,
-                                      ),
-                                    ),
-                                    if (task.category != null)
-                                      Container(
-                                        margin: const EdgeInsets.only(top: 4),
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _categoryColors[task.category] ?? Colors.grey,
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          task.category!,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      )
-                                  ],
-                                ),
-                              ),
-                              if (task.time != null)
-                                Text(
-                                  '${task.time!.hour.toString().padLeft(2, '0')}:${task.time!.minute.toString().padLeft(2, '0')}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isTimePassed ? Colors.red : theme.hintColor,
-                                  ),
-                                )
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          child: _buildTaskList(context, auth),
         ),
       ],
     );
+  }
+
+  Widget _buildFilters(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value.toLowerCase();
+            });
+          },
+          decoration: InputDecoration(
+            hintText: 'search'.tr(),
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: selectedCategory,
+                hint: Text('filterCategory'.tr()),
+                items: [
+                  null,
+                  "Work",
+                  "Personal",
+                  "Shopping",
+                  "Health",
+                  "Learning",
+                  "Social",
+                  "Hobby",
+                  "Goals",
+                ].map(
+                  (cat) => DropdownMenuItem<String>(
+                    value: cat,
+                    child: Text(cat ?? 'allCategories'.tr()),
+                  ),
+                ).toList(),
+                onChanged: (value) => setState(() => selectedCategory = value),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  locale: context.locale,
+                );
+                if (pickedDate != null) {
+                  setState(() => selectedDate = pickedDate);
+                }
+              },
+              icon: const Icon(Icons.calendar_today),
+              label: Text(
+                selectedDate == null
+                    ? 'filterDate'.tr()
+                    : DateFormat.yMMMd(context.locale.toString()).format(selectedDate!),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.clear),
+              tooltip: 'clearFilters'.tr(),
+              onPressed: () {
+                setState(() {
+                  searchQuery = '';
+                  selectedCategory = null;
+                  selectedDate = null;
+                });
+              },
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTaskList(BuildContext context, AuthService auth) {
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: auth.tasksStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var tasks = (snapshot.data ?? [])
+            .where((t) => t['deleted'] != true)
+            .toList();
+
+        tasks = tasks.where((task) {
+          final text = (task['text'] ?? '').toLowerCase();
+          final matchText = searchQuery.isEmpty || text.contains(searchQuery);
+          final matchCategory = selectedCategory == null || task['category'] == selectedCategory;
+          final taskTime = task['time'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
+              : null;
+          final matchDate = selectedDate == null || (taskTime != null &&
+              taskTime.year == selectedDate!.year &&
+              taskTime.month == selectedDate!.month &&
+              taskTime.day == selectedDate!.day);
+          return matchText && matchCategory && matchDate;
+        }).toList();
+
+        tasks.sort((a, b) {
+          final aDone = a['isDone'] ?? false;
+          final bDone = b['isDone'] ?? false;
+          return aDone == bDone ? 0 : (aDone ? 1 : -1);
+        });
+
+        if (tasks.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.inbox, size: 64, color: Colors.deepPurple),
+                const SizedBox(height: 16),
+                Text('noTasks'.tr(), style: Theme.of(context).textTheme.bodyLarge),
+              ],
+            ),
+          );
+        }
+
+        final brightness = Theme.of(context).brightness;
+        return ListView.builder(
+          key: ValueKey('$brightness-${context.locale.toString()}'),
+          padding: const EdgeInsets.all(16),
+          itemCount: tasks.length,
+          itemBuilder: (context, index) =>
+              _buildSwipeableTaskItem(context, tasks[index], auth),
+        );
+      },
+    );
+  }
+
+  Widget _buildSwipeableTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
+    return Dismissible(
+      key: Key(task['id']),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        color: Colors.red,
+        child: const Icon(Icons.delete, color: Colors.white),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('confirmDelete'.tr()),
+            content: Text('deleteTaskConfirm'.tr(args: [task['text']])),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('cancel'.tr()),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('delete'.tr(), style: const TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) {
+        final deletedTask = Map<String, dynamic>.from(task);
+        auth.deleteTask(task['id']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('taskDeleted'.tr()),
+            action: SnackBarAction(
+              label: 'undo'.tr(),
+              onPressed: () async {
+                await auth.addTask(deletedTask);
+              },
+            ),
+          ),
+        );
+      },
+      child: _buildTaskItem(context, task, auth),
+    );
+  }
+
+  Widget _buildTaskItem(BuildContext context, Map<String, dynamic> task, AuthService auth) {
+    final theme = Theme.of(context);
+    final isDone = task['isDone'] ?? false;
+    final time = task['time'] != null ? DateTime.fromMillisecondsSinceEpoch(task['time']) : null;
+    final isTimePassed = time != null && time.isBefore(DateTime.now());
+    final baseStyle = theme.textTheme.bodyLarge!;
+    final textStyle = isDone
+        ? baseStyle.copyWith(
+            decoration: TextDecoration.lineThrough,
+            color: baseStyle.color!.withOpacity(0.5),
+          )
+        : baseStyle;
+
+    final cardColor = isDone ? theme.colorScheme.surfaceVariant : theme.cardColor;
+    final elevation = isDone ? 0.0 : 2.0;
+
+    return Card(
+      color: cardColor,
+      elevation: elevation,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        leading: Checkbox(
+          value: isDone,
+          onChanged: (v) => auth.updateTask(task['id'], {'isDone': v}),
+          activeColor: Colors.deepPurple,
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              task['text'],
+              style: textStyle,
+            ),
+            if (task['category'] != null) ...[
+              const SizedBox(height: 4),
+              Chip(
+                label: Text(task['category']),
+                backgroundColor: _getCategoryColor(task['category']),
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              ),
+            ],
+          ],
+        ),
+        trailing: time != null
+            ? Text(
+                '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
+                style: TextStyle(color: isTimePassed ? Colors.red : theme.hintColor),
+              )
+            : null,
+        onTap: () => _editTask(context, task, auth),
+      ),
+    );
+  }
+
+  Widget _buildGuestRestriction(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.warning, size: 64, color: Colors.orange),
+          const SizedBox(height: 20),
+          Text('guest_restriction'.tr(),
+              style: const TextStyle(fontSize: 18), textAlign: TextAlign.center),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.pushNamedAndRemoveUntil(context, '/auth', (route) => false),
+            child: Text('login.button'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGuestRestriction(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('guest_restriction'.tr()),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Color _getCategoryColor(String? category) {
+    const colors = {
+      "Work": Colors.blue,
+      "Personal": Colors.orange,
+      "Shopping": Colors.green,
+      "Health": Colors.red,
+      "Learning": Colors.purple,
+      "Social": Colors.teal,
+      "Hobby": Colors.brown,
+      "Goals": Colors.pink,
+    };
+    return colors[category] ?? Colors.grey;
+  }
+
+  void _navigateToCreateTask(BuildContext context) async {
+    final newTask = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CreateTaskPage()),
+    );
+
+    if (newTask != null && newTask is Map<String, dynamic>) {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      await auth.addTask(newTask);
+
+      if (newTask['time'] != null) {
+        final DateTime taskTime = DateTime.fromMillisecondsSinceEpoch(newTask['time']);
+        final int notificationId = newTask['text'].hashCode ^ taskTime.hashCode;
+
+        await NotificationService.scheduleNotification(
+          id: notificationId,
+          title: 'Reminder: ${newTask['text']}',
+          body: '⏰ 30 minutes left! Get ready for the task',
+          deadline: taskTime,
+        );
+      }
+    }
+  }
+
+
+  void _editTask(BuildContext context, Map<String, dynamic> task, AuthService auth) async {
+    final editedTask = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreateTaskPage(
+          initialText: task['text'],
+          initialTime: task['time'] != null
+              ? DateTime.fromMillisecondsSinceEpoch(task['time'])
+              : null,
+          initialCategory: task['category'],
+          initialId: task['id'],
+        ),
+      ),
+    );
+
+    if (editedTask != null && editedTask is Map<String, dynamic>) {
+      await auth.updateTask(task['id'], editedTask);
+    }
   }
 }
